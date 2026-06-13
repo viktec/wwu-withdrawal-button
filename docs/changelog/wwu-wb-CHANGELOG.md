@@ -5,6 +5,28 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Frontend usability: order list, verify page, email preview, block (1.0.0-alpha.13, 2026-06-14)
+- **Eligible-orders list**: the My Account "Right of withdrawal" tab rendered an
+  empty placeholder, and the public `[wwu_wb_form]` page with no order in context
+  only said "Order not found" — so a customer never saw an order to act on. A
+  shared `EligibleOrders` builder now lists the customer's recent WooCommerce
+  orders (HPOS-safe) that are eligible now or already requested; both surfaces use
+  it. Guests are guided to the order-email link.
+- **Readable verification page**: `/verify/{uid}` now content-negotiates — a
+  browser gets a self-contained "certificate" page (intact/altered, order,
+  datetime, within-window, evidence hash), API clients and `?format=json` still
+  get JSON.
+- **Email preview in Settings**: a "Preview the acknowledgement email" link opens
+  the email built from sample data — on WooCommerce through the WC style inliner,
+  so it shows the store's email branding exactly as sent.
+- **Gutenberg block** `wwu-wb/withdrawal-form` ("Withdrawal — self-service"): a
+  dynamic, server-rendered block that wraps the form shortcode (same applicability
+  + ownership gates), shipped with no build step (vanilla editor JS +
+  ServerSideRender preview). WooCommerce Blocks note: the My Account page is still
+  shortcode-rendered in current WooCommerce, so the existing classic hooks remain
+  the supported integration and keep working under block themes; the block adds an
+  editor placement option.
+
 ### WooCommerce email integration (1.0.0-alpha.12, 2026-06-14)
 - The consumer **acknowledgement of receipt is now a first-class `WC_Email`**
   (`WooAckEmail`, id `wwu_wb_withdrawal_ack`). It appears under WooCommerce →

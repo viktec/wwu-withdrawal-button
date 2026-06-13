@@ -161,6 +161,9 @@ final class Plugin {
 		// Shortcodes (button / form / status / model form / info).
 		( new Shortcodes() )->register();
 
+		// Gutenberg block (server-rendered wrapper over the form shortcode).
+		( new \WWU\WithdrawalButton\Frontend\Blocks() )->register();
+
 		// Ecosystem compatibility (Complianz consent-block whitelist + cache exclusions).
 		( new Complianz() )->register();
 		( new CacheExclusions() )->register();
