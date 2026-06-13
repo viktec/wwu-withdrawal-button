@@ -33,20 +33,35 @@ final class Template {
 	/**
 	 * Render a template and return its output.
 	 *
-	 * @param string $name Template name relative to templates/ (e.g. 'form/withdrawal-form.php').
-	 * @param array  $args Variables exposed to the template.
+	 * @param string $template_name Template name relative to templates/ (e.g. 'form/withdrawal-form.php').
+	 * @param array  $args          Variables exposed to the template.
 	 * @return string
 	 */
-	public static function render( string $name, array $args = array() ): string {
-		$template = self::locate( $name, $args );
-		if ( '' === $template ) {
+	public static function render( string $template_name, array $args = array() ): string {
+		$resolved = self::locate( $template_name, $args );
+		if ( '' === $resolved ) {
 			return '';
 		}
+		// Include in an isolated scope so the local variable names here cannot
+		// collide with template variables (e.g. a "name" arg vs a $name parameter).
+		return self::load_in_scope( $resolved, $args );
+	}
 
+	/**
+	 * Include a template in an isolated scope and capture its output.
+	 *
+	 * The two locals use reserved, collision-proof names so extract() always
+	 * populates the real template variables (a template arg named "name",
+	 * "args" or "template" would otherwise be skipped by EXTR_SKIP).
+	 *
+	 * @param string $wwu_wb_template_file Absolute template path.
+	 * @param array  $wwu_wb_template_vars Variables to expose.
+	 * @return string
+	 */
+	private static function load_in_scope( string $wwu_wb_template_file, array $wwu_wb_template_vars ): string {
 		ob_start();
-		// Expose args to the template scope.
-		extract( $args, EXTR_SKIP ); // phpcs:ignore WordPress.PHP.DontExtract.extract_extract
-		include $template;
+		extract( $wwu_wb_template_vars, EXTR_SKIP ); // phpcs:ignore WordPress.PHP.DontExtract.extract_extract
+		include $wwu_wb_template_file;
 		return (string) ob_get_clean();
 	}
 

@@ -14,6 +14,8 @@ declare( strict_types=1 );
 namespace WWU\WithdrawalButton\Admin;
 
 use WWU\WithdrawalButton\REST\Authentication;
+use WWU\WithdrawalButton\Core\Settings;
+use WWU\WithdrawalButton\DurableMedium\PdfBuilder;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -59,6 +61,13 @@ final class AdminController {
 	private $compliance;
 
 	/**
+	 * Dashboard / onboarding page handler.
+	 *
+	 * @var DashboardPage
+	 */
+	private $dashboard;
+
+	/**
 	 * Asset loader.
 	 *
 	 * @var AdminAssets
@@ -73,6 +82,7 @@ final class AdminController {
 		$this->inspector  = new InspectorPage();
 		$this->requests   = new RequestsDashboard();
 		$this->compliance = new ComplianceStatusPage();
+		$this->dashboard  = new DashboardPage();
 		$this->assets     = new AdminAssets();
 	}
 
@@ -85,7 +95,31 @@ final class AdminController {
 		add_action( 'admin_menu', array( $this, 'register_menu' ) );
 		add_action( 'admin_post_wwu_wb_save_settings', array( $this->settings, 'handle_save' ) );
 		add_action( 'admin_notices', array( $this, 'maybe_mail_failure_notice' ) );
+		add_action( 'admin_notices', array( $this, 'maybe_pdf_missing_notice' ) );
 		$this->assets->register();
+	}
+
+	/**
+	 * On the plugin's own screens, warn (in plain language) when the PDF library
+	 * is missing so the PDF copy of the receipt can't be attached. The email
+	 * receipt still works, so this is informational, not an error.
+	 *
+	 * @return void
+	 */
+	public function maybe_pdf_missing_notice(): void {
+		if ( ! current_user_can( Authentication::capability() ) ) {
+			return;
+		}
+		$screen = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+		if ( ! $screen || false === strpos( (string) $screen->id, self::MENU_SLUG ) ) {
+			return;
+		}
+		if ( PdfBuilder::is_available() || empty( Settings::main()['enabled'] ) ) {
+			return;
+		}
+		echo '<div class="notice notice-warning"><p>'
+			. esc_html__( 'WWU Withdrawal Button: the PDF library was not found, so the receipt is sent by email only (no PDF attachment). This is fine to go live, but to also attach a PDF copy, install the plugin using the official packaged ZIP (it bundles the library) instead of a plain source copy.', 'wwu-withdrawal-button' )
+			. '</p></div>';
 	}
 
 	/**
@@ -117,7 +151,7 @@ final class AdminController {
 			__( 'Withdrawal Button', 'wwu-withdrawal-button' ),
 			$capability,
 			self::MENU_SLUG,
-			array( $this, 'render_dashboard' ),
+			array( $this->dashboard, 'render' ),
 			'dashicons-undo',
 			56
 		);
@@ -128,7 +162,7 @@ final class AdminController {
 			__( 'Dashboard', 'wwu-withdrawal-button' ),
 			$capability,
 			self::MENU_SLUG,
-			array( $this, 'render_dashboard' )
+			array( $this->dashboard, 'render' )
 		);
 
 		add_submenu_page(
@@ -166,33 +200,5 @@ final class AdminController {
 			self::INSPECTOR_SLUG,
 			array( $this->inspector, 'render' )
 		);
-	}
-
-	/**
-	 * Render the dashboard placeholder (full dashboard ships in F8).
-	 *
-	 * @return void
-	 */
-	public function render_dashboard(): void {
-		$go_live = WWU_WB_GO_LIVE_DATE;
-		echo '<div class="wrap wwu-wb-wrap">';
-		echo '<h1>' . esc_html__( 'WWU Withdrawal Button', 'wwu-withdrawal-button' ) . '</h1>';
-		echo '<p>' . esc_html__( 'EU online right-of-withdrawal function (Art. 11a / Art. 54-bis) for WooCommerce & FluentCart.', 'wwu-withdrawal-button' ) . '</p>';
-		echo '<p><strong>' . esc_html(
-			sprintf(
-				/* translators: %s: go-live date. */
-				__( 'Legal go-live: %s — the obligation applies to contracts concluded on or after this date.', 'wwu-withdrawal-button' ),
-				$go_live
-			)
-		) . '</strong></p>';
-		echo '<p class="description">' . esc_html__( 'This is a foundation build (F0). The withdrawal flow, durable-medium receipt, immutable log and compliance documents are added in the following phases.', 'wwu-withdrawal-button' ) . '</p>';
-		echo '<p style="margin-top:2em;color:#666;">' . wp_kses_post(
-			sprintf(
-				/* translators: %s: WebWakeUp link. */
-				__( 'Made with care by %s.', 'wwu-withdrawal-button' ),
-				'<a href="https://webwakeup.it" target="_blank" rel="noopener">WebWakeUp</a>'
-			)
-		) . '</p>';
-		echo '</div>';
 	}
 }

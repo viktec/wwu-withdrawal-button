@@ -5,6 +5,24 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Usability + bugfix from live testing (1.0.0-alpha.10, 2026-06-13)
+- **Fix (visible bug)**: `Template::render()` had a `$name` parameter colliding
+  with template variables of the same key (`extract(EXTR_SKIP)` skipped them), so
+  the form's "name" field (and the email) showed the template path instead of the
+  consumer's name. Rendering now happens in an isolated scope with reserved
+  variable names — fixes the form and all email/PDF templates.
+- **Onboarding Dashboard** (`DashboardPage`): replaces the placeholder. A setup
+  checklist (enabled / platform / form page / PDF) with one-click fixes, a plain
+  explanation of **where the button appears**, and the reasons it might be hidden
+  on an order (out-of-scope country, non-contract status, Art.59/B2B, disabled) —
+  written for non-technical merchants.
+- **Settings completed**: a "Where the button applies" section (applicability
+  mode always / EU-EEA / custom + custom country list + B2B toggle) so merchants
+  can choose to show it everywhere; a "Receipt & evidence" section (attach-PDF,
+  notification email, retention years, OpenTimestamps/none provider, account-tab
+  slug with rewrite flush). The PDF row warns when the library is missing and how
+  to fix it without the command line.
+
 ### Custom CSS + styling reference (1.0.0-alpha.9, 2026-06-13)
 - Frontend CSS refactored to expose **CSS custom properties** (`--wwu-wb-*`) on
   every element (accent, radius, button/field/notice colors, spacing) for

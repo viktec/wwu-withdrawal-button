@@ -74,6 +74,9 @@ final class SettingsPage {
 		echo '</td></tr>';
 		echo '</tbody></table>';
 
+		$this->render_applicability_section( $settings );
+		$this->render_receipt_section( $settings );
+
 		echo '<h2>' . esc_html__( 'Debug', 'wwu-withdrawal-button' ) . '</h2>';
 		echo '<table class="form-table" role="presentation"><tbody>';
 
@@ -120,6 +123,107 @@ final class SettingsPage {
 		) . '</p>';
 
 		echo '</div>';
+	}
+
+	/**
+	 * Render the "Where it applies" section (applicability mode + B2B).
+	 *
+	 * @param array $settings Current settings (for context only).
+	 * @return void
+	 */
+	private function render_applicability_section( array $settings ): void {
+		$app  = wp_parse_args(
+			(array) get_option( 'wwu_wb_applicability', array() ),
+			array(
+				'mode'                 => 'eu_eea_only',
+				'custom_countries'     => array(),
+				'b2b_vat_out_of_scope' => true,
+			)
+		);
+		$mode = (string) $app['mode'];
+
+		echo '<h2>' . esc_html__( 'Where the button applies', 'wwu-withdrawal-button' ) . '</h2>';
+		echo '<table class="form-table" role="presentation"><tbody>';
+
+		echo '<tr><th scope="row">' . esc_html__( 'Applicability', 'wwu-withdrawal-button' ) . '</th><td>';
+		echo '<select name="applicability_mode">';
+		$opts = array(
+			'eu_eea_only' => __( 'Only EU/EEA consumers (legal minimum — recommended)', 'wwu-withdrawal-button' ),
+			'always'      => __( 'Always show it (to every consumer, also non-EU)', 'wwu-withdrawal-button' ),
+			'custom_list' => __( 'Only a custom list of countries', 'wwu-withdrawal-button' ),
+		);
+		foreach ( $opts as $value => $label ) {
+			echo '<option value="' . esc_attr( $value ) . '" ' . selected( $mode, $value, false ) . '>' . esc_html( $label ) . '</option>';
+		}
+		echo '</select>';
+		echo '<p class="description">' . esc_html__( 'The button is mandatory only for EU/EEA consumers. "Always show it" is a safe superset if you prefer one consistent flow (showing it to non-EU buyers is allowed and low-risk).', 'wwu-withdrawal-button' ) . '</p>';
+		echo '</td></tr>';
+
+		echo '<tr><th scope="row">' . esc_html__( 'Custom countries', 'wwu-withdrawal-button' ) . '</th><td>';
+		echo '<input type="text" name="applicability_custom" class="regular-text" value="' . esc_attr( implode( ', ', (array) $app['custom_countries'] ) ) . '" placeholder="IT, DE, FR" />';
+		echo '<p class="description">' . esc_html__( 'Two-letter country codes, comma-separated. Used only with the "custom list" mode.', 'wwu-withdrawal-button' ) . '</p>';
+		echo '</td></tr>';
+
+		echo '<tr><th scope="row">' . esc_html__( 'Business (B2B) orders', 'wwu-withdrawal-button' ) . '</th><td>';
+		echo '<label><input type="checkbox" name="applicability_b2b" value="1" ' . checked( ! empty( $app['b2b_vat_out_of_scope'] ), true, false ) . ' /> ';
+		echo esc_html__( 'Hide the button when a VAT number was provided (treat as business / out of scope).', 'wwu-withdrawal-button' ) . '</label>';
+		echo '</td></tr>';
+
+		echo '</tbody></table>';
+	}
+
+	/**
+	 * Render the "Receipt & evidence" section.
+	 *
+	 * @param array $settings Current settings.
+	 * @return void
+	 */
+	private function render_receipt_section( array $settings ): void {
+		$ts       = wp_parse_args( (array) get_option( 'wwu_wb_timestamp', array() ), array( 'provider' => 'opentimestamps' ) );
+		$merchant = (string) ( $settings['merchant_email'] ?? get_option( 'admin_email' ) );
+		$retention= (int) ( $settings['retention_years'] ?? 10 );
+		$slug     = (string) ( $settings['endpoint_slug'] ?? 'wwu-withdrawal' );
+
+		echo '<h2>' . esc_html__( 'Receipt & evidence', 'wwu-withdrawal-button' ) . '</h2>';
+		echo '<table class="form-table" role="presentation"><tbody>';
+
+		echo '<tr><th scope="row">' . esc_html__( 'Attach PDF receipt', 'wwu-withdrawal-button' ) . '</th><td>';
+		echo '<label><input type="checkbox" name="send_pdf" value="1" ' . checked( ! empty( $settings['send_pdf'] ), true, false ) . ' /> ';
+		echo esc_html__( 'Attach a PDF copy to the acknowledgement email (the email itself is always the durable medium).', 'wwu-withdrawal-button' ) . '</label>';
+		if ( ! \WWU\WithdrawalButton\DurableMedium\PdfBuilder::is_available() ) {
+			echo '<p class="description" style="color:#8a1f21;">' . esc_html__( 'PDF library not detected — PDF receipts are currently disabled (the email still works). Install the plugin from the official ZIP to enable PDFs.', 'wwu-withdrawal-button' ) . '</p>';
+		}
+		echo '</td></tr>';
+
+		echo '<tr><th scope="row">' . esc_html__( 'Notification email', 'wwu-withdrawal-button' ) . '</th><td>';
+		echo '<input type="email" name="merchant_email" class="regular-text" value="' . esc_attr( $merchant ) . '" />';
+		echo '<p class="description">' . esc_html__( 'Where to notify you of new withdrawal requests.', 'wwu-withdrawal-button' ) . '</p>';
+		echo '</td></tr>';
+
+		echo '<tr><th scope="row">' . esc_html__( 'Evidence retention (years)', 'wwu-withdrawal-button' ) . '</th><td>';
+		echo '<input type="number" name="retention_years" min="1" max="30" value="' . esc_attr( (string) $retention ) . '" class="small-text" />';
+		echo '<p class="description">' . esc_html__( 'How long to keep the immutable log (default 10 — the contract limitation period).', 'wwu-withdrawal-button' ) . '</p>';
+		echo '</td></tr>';
+
+		echo '<tr><th scope="row">' . esc_html__( 'Trusted timestamp', 'wwu-withdrawal-button' ) . '</th><td>';
+		echo '<select name="timestamp_provider">';
+		$tsopts = array(
+			'opentimestamps' => __( 'OpenTimestamps (free, Bitcoin-anchored — recommended)', 'wwu-withdrawal-button' ),
+			'none'           => __( 'None (the hash chain alone is the evidence)', 'wwu-withdrawal-button' ),
+		);
+		foreach ( $tsopts as $value => $label ) {
+			echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) $ts['provider'], $value, false ) . '>' . esc_html( $label ) . '</option>';
+		}
+		echo '</select>';
+		echo '<p class="description">' . esc_html__( 'OpenTimestamps sends only a one-way hash to public calendar servers — never personal data.', 'wwu-withdrawal-button' ) . '</p>';
+		echo '</td></tr>';
+
+		echo '<tr><th scope="row">' . esc_html__( 'My Account tab slug', 'wwu-withdrawal-button' ) . '</th><td>';
+		echo '<input type="text" name="endpoint_slug" class="regular-text" value="' . esc_attr( $slug ) . '" />';
+		echo '<p class="description">' . esc_html__( 'The URL slug of the "Right of withdrawal" tab in the customer account. Change only if it conflicts.', 'wwu-withdrawal-button' ) . '</p>';
+		echo '</td></tr>';
+
+		echo '</tbody></table>';
 	}
 
 	/**
@@ -214,9 +318,33 @@ final class SettingsPage {
 
 		// General settings.
 		$settings               = (array) get_option( 'wwu_wb_settings', array() );
+		$old_slug               = sanitize_title( (string) ( $settings['endpoint_slug'] ?? 'wwu-withdrawal' ) );
 		$settings['enabled']    = Sanitizer::bool( $_POST['enabled'] ?? '' );
 		$settings['custom_css'] = Sanitizer::css( isset( $_POST['custom_css'] ) ? wp_unslash( $_POST['custom_css'] ) : '' );
+		$settings['send_pdf']        = Sanitizer::bool( $_POST['send_pdf'] ?? '' );
+		$settings['merchant_email']  = sanitize_email( (string) ( $_POST['merchant_email'] ?? '' ) );
+		$settings['retention_years'] = max( 1, min( 30, (int) ( $_POST['retention_years'] ?? 10 ) ) );
+		$new_slug                    = sanitize_title( (string) ( $_POST['endpoint_slug'] ?? 'wwu-withdrawal' ) );
+		$settings['endpoint_slug']   = '' !== $new_slug ? $new_slug : 'wwu-withdrawal';
 		update_option( 'wwu_wb_settings', $settings );
+
+		// Applicability.
+		$applicability = array(
+			'mode'                 => Sanitizer::enum( $_POST['applicability_mode'] ?? '', array( 'eu_eea_only', 'always', 'custom_list' ), 'eu_eea_only' ),
+			'custom_countries'     => Sanitizer::country_list( $_POST['applicability_custom'] ?? '' ),
+			'b2b_vat_out_of_scope' => Sanitizer::bool( $_POST['applicability_b2b'] ?? '' ),
+		);
+		update_option( 'wwu_wb_applicability', $applicability );
+
+		// Timestamp provider.
+		$timestamp = (array) get_option( 'wwu_wb_timestamp', array() );
+		$timestamp['provider'] = Sanitizer::enum( $_POST['timestamp_provider'] ?? '', array( 'opentimestamps', 'rfc3161', 'none' ), 'opentimestamps' );
+		update_option( 'wwu_wb_timestamp', $timestamp );
+
+		// If the account-tab slug changed, refresh rewrite rules so it works immediately.
+		if ( $new_slug !== $old_slug ) {
+			flush_rewrite_rules( false );
+		}
 
 		// Debug audience.
 		$debug = Audience::config();
