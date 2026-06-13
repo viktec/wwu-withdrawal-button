@@ -225,14 +225,16 @@ final class WooMyAccount {
 	}
 
 	/**
-	 * Render the customer's withdrawal-request list.
+	 * Render the customer's withdrawal-relevant orders (eligible + already
+	 * requested). Delegates to the shared EligibleOrders builder so the account
+	 * tab and the public form page show the same list.
 	 *
 	 * @param int             $user_id User ID.
 	 * @param OrderDataSource $adapter Adapter.
 	 * @return string
 	 */
 	private function render_request_list( int $user_id, OrderDataSource $adapter ): string {
-		return Template::render( 'myaccount/withdrawal-list.php', array() );
+		return EligibleOrders::render_for_user( $user_id );
 	}
 
 	/**

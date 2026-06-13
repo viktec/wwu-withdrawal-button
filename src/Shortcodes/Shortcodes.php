@@ -88,6 +88,14 @@ final class Shortcodes {
 		if ( '' === $order_ref && isset( $_GET['wwu_wb_order'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			$order_ref = sanitize_text_field( wp_unslash( $_GET['wwu_wb_order'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		}
+		// No specific order in context: instead of an unhelpful error, show the
+		// logged-in customer their withdrawal-relevant orders to choose from (and
+		// guide guests to the email link). A failed access for a *given* order ref
+		// still returns the not-found notice below.
+		if ( '' === $order_ref ) {
+			return \WWU\WithdrawalButton\Frontend\EligibleOrders::render_for_user( get_current_user_id() );
+		}
+
 		$ctx = $this->resolve_order_access( $order_ref );
 		if ( ! $ctx ) {
 			return '<p class="wwu-wb-notice">' . esc_html__( 'Order not found or access could not be verified.', 'wwu-withdrawal-button' ) . '</p>';
