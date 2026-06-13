@@ -56,7 +56,13 @@ final class TimestampService {
 		$config = (array) get_option( 'wwu_wb_timestamp', array() );
 		$key    = (string) ( $config['provider'] ?? 'opentimestamps' );
 
-		$provider = ( 'none' === $key ) ? new NoneProvider() : new OpenTimestampsProvider();
+		if ( 'none' === $key ) {
+			$provider = new NoneProvider();
+		} elseif ( 'rfc3161' === $key ) {
+			$provider = new Rfc3161Provider( (array) ( $config['rfc3161'] ?? array() ) );
+		} else {
+			$provider = new OpenTimestampsProvider();
+		}
 
 		/**
 		 * Filter the timestamp provider (e.g. inject an RFC 3161 / eIDAS provider).
@@ -102,7 +108,15 @@ final class TimestampService {
 			// Link the proof back to the log row.
 			global $wpdb;
 			$wpdb->update( LogTable::name(), array( 'ots_proof_id' => $id ), array( 'id' => $log_id ), array( '%d' ), array( '%d' ) );
-			Debug::info( 'timestamp', 'stamped', array( 'log_id' => $log_id, 'provider' => $provider->key() ) );
+
+			// Synchronous providers (RFC 3161) return a final proof immediately —
+			// confirm it now so the upgrade cron skips it. Asynchronous providers
+			// (OpenTimestamps) stay pending until a Bitcoin block confirms.
+			if ( empty( $stamp['pending'] ) ) {
+				$repo->mark_confirmed( $id, (string) $stamp['proof_blob'], null );
+			}
+
+			Debug::info( 'timestamp', 'stamped', array( 'log_id' => $log_id, 'provider' => $provider->key(), 'pending' => ! empty( $stamp['pending'] ) ) );
 
 			/**
 			 * Fires when a log row's hash has been submitted for timestamping.

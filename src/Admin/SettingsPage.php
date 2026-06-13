@@ -214,17 +214,39 @@ final class SettingsPage {
 		echo '<p class="description">' . esc_html__( 'How long to keep the immutable log (default 10 — the contract limitation period).', 'wwu-withdrawal-button' ) . '</p>';
 		echo '</td></tr>';
 
+		$rfc = wp_parse_args(
+			(array) ( $ts['rfc3161'] ?? array() ),
+			array(
+				'endpoint' => 'http://timestamp.sectigo.com/qualified',
+				'user'     => '',
+				'pass'     => '',
+			)
+		);
+
 		echo '<tr><th scope="row">' . esc_html__( 'Trusted timestamp', 'wwu-withdrawal-button' ) . '</th><td>';
 		echo '<select name="timestamp_provider">';
 		$tsopts = array(
 			'opentimestamps' => __( 'OpenTimestamps (free, Bitcoin-anchored — recommended)', 'wwu-withdrawal-button' ),
+			'rfc3161'        => __( 'RFC 3161 timestamp authority (immediate; eIDAS-qualified options)', 'wwu-withdrawal-button' ),
 			'none'           => __( 'None (the hash chain alone is the evidence)', 'wwu-withdrawal-button' ),
 		);
 		foreach ( $tsopts as $value => $label ) {
 			echo '<option value="' . esc_attr( $value ) . '" ' . selected( (string) $ts['provider'], $value, false ) . '>' . esc_html( $label ) . '</option>';
 		}
 		echo '</select>';
-		echo '<p class="description">' . esc_html__( 'OpenTimestamps sends only a one-way hash to public calendar servers — never personal data.', 'wwu-withdrawal-button' ) . '</p>';
+		echo '<p class="description">' . esc_html__( 'Only a one-way hash leaves your site — never personal data. OpenTimestamps anchors to Bitcoin (free, ~hours). RFC 3161 gets an immediate signed token from a Time-Stamp Authority.', 'wwu-withdrawal-button' ) . '</p>';
+		echo '</td></tr>';
+
+		// RFC 3161 configuration (only used when that provider is selected).
+		echo '<tr><th scope="row">' . esc_html__( 'RFC 3161 — TSA endpoint', 'wwu-withdrawal-button' ) . '</th><td>';
+		echo '<input type="url" name="rfc3161_endpoint" class="regular-text code" value="' . esc_attr( (string) $rfc['endpoint'] ) . '" placeholder="http://timestamp.sectigo.com/qualified" />';
+		echo '<p class="description">' . wp_kses_post( __( 'Free, no account: <code>http://timestamp.sectigo.com/qualified</code> (eIDAS-qualified) or <code>http://timestamp.digicert.com</code>. For a national qualified provider (e.g. Aruba, InfoCert, D-Trust, Universign, FNMT, SwissSign) paste their RFC 3161 endpoint and fill in the credentials below.', 'wwu-withdrawal-button' ) ) . '</p>';
+		echo '</td></tr>';
+
+		echo '<tr><th scope="row">' . esc_html__( 'RFC 3161 — credentials (optional)', 'wwu-withdrawal-button' ) . '</th><td>';
+		echo '<input type="text" name="rfc3161_user" class="regular-text" autocomplete="off" value="' . esc_attr( (string) $rfc['user'] ) . '" placeholder="' . esc_attr__( 'Username (only for account-based QTSPs)', 'wwu-withdrawal-button' ) . '" />';
+		echo '<br><input type="password" name="rfc3161_pass" class="regular-text" autocomplete="new-password" value="" placeholder="' . esc_attr__( 'Password — leave blank to keep the saved one', 'wwu-withdrawal-button' ) . '" style="margin-top:6px;" />';
+		echo '<p class="description">' . esc_html__( 'Basic-auth username/password, only required by paid qualified providers. Free TSAs need none. The password is stored on your server and never shown again.', 'wwu-withdrawal-button' ) . '</p>';
 		echo '</td></tr>';
 
 		echo '<tr><th scope="row">' . esc_html__( 'My Account tab slug', 'wwu-withdrawal-button' ) . '</th><td>';
@@ -424,6 +446,18 @@ final class SettingsPage {
 		// Timestamp provider.
 		$timestamp = (array) get_option( 'wwu_wb_timestamp', array() );
 		$timestamp['provider'] = Sanitizer::enum( $_POST['timestamp_provider'] ?? '', array( 'opentimestamps', 'rfc3161', 'none' ), 'opentimestamps' );
+
+		// RFC 3161 config. The password uses the "leave blank to keep" pattern so
+		// the saved secret is never re-emitted to the browser.
+		$rfc3161           = (array) ( $timestamp['rfc3161'] ?? array() );
+		$rfc3161['endpoint'] = esc_url_raw( trim( (string) ( $_POST['rfc3161_endpoint'] ?? '' ) ) );
+		$rfc3161['user']     = sanitize_text_field( (string) ( $_POST['rfc3161_user'] ?? '' ) );
+		$new_pass            = (string) ( $_POST['rfc3161_pass'] ?? '' ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Basic-auth secret kept verbatim.
+		if ( '' !== $new_pass ) {
+			$rfc3161['pass'] = $new_pass;
+		}
+		$timestamp['rfc3161'] = $rfc3161;
+
 		update_option( 'wwu_wb_timestamp', $timestamp );
 
 		// If the account-tab slug changed, refresh rewrite rules so it works immediately.

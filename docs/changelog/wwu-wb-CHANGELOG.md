@@ -5,6 +5,26 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### RFC 3161 / eIDAS timestamp provider (1.0.0-alpha.16, 2026-06-14)
+- **New `Rfc3161Provider`** for the pluggable timestamp layer: sends the log
+  row's SHA-256 to an RFC 3161 Time-Stamp Authority and stores the signed token.
+  Unlike OpenTimestamps (Bitcoin, asynchronous), an RFC 3161 token is final
+  immediately, so the stamp is confirmed at creation (the upgrade cron skips it).
+  The ASN.1 request/response is hand-rolled (no `openssl ts` exec dependency, no
+  extra library). Verified end-to-end against Sectigo's free eIDAS-qualified TSA
+  (PKIStatus granted).
+- **Settings**: "Trusted timestamp" now offers OpenTimestamps / RFC 3161 / None,
+  with an endpoint field (prefilled with the free, no-account eIDAS-qualified
+  `timestamp.sectigo.com/qualified`) and optional Basic-auth credentials for paid
+  national QTSPs (Aruba, InfoCert, D-Trust, Universign, FNMT, SwissSign…). The
+  password uses the "leave blank to keep" pattern and is never re-emitted.
+- `TimestampService` routes `provider=rfc3161` to the new provider and confirms
+  synchronous proofs immediately. Smoke suite `rfc3161` (request DER shape, SHA-256
+  OID, digest embedding, PKIStatus parsing, empty-endpoint/bad-hex guards).
+- Background: any RFC 3161 TSA works by config; `wwu_wb_timestamp_provider` filter
+  still lets integrators inject custom providers. See
+  `docs/analysis/wwu-wb-timestamp-providers-ANALYSIS.md`.
+
 ### Refund evidence + procedure guide (1.0.0-alpha.15, 2026-06-14)
 - **Reimbursement is now recorded in the evidence log.** `WooRefundRecorder`
   hooks `woocommerce_order_refunded` and appends a `refund_issued` event (amount,

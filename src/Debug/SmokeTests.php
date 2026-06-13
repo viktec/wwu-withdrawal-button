@@ -44,6 +44,7 @@ final class SmokeTests {
 		'window'         => 'suite_window',
 		'log'            => 'suite_log',
 		'durable_medium' => 'suite_durable_medium',
+		'rfc3161'        => 'suite_rfc3161',
 	);
 
 	/**
@@ -440,6 +441,51 @@ final class SmokeTests {
 	 * @param string $output    Human-readable output.
 	 * @return array
 	 */
+	/**
+	 * RFC 3161 provider: request building + status parsing + guards (offline).
+	 *
+	 * @return array
+	 */
+	private function suite_rfc3161(): array {
+		$tests = array();
+
+		// Guard: empty endpoint makes no request and returns null.
+		$empty = new \WWU\WithdrawalButton\Timestamp\Rfc3161Provider( array( 'endpoint' => '' ) );
+		$tests[] = $this->assert( 'rfc3161.empty_endpoint_null', null === $empty->stamp( str_repeat( 'a', 64 ) ), 'Empty endpoint returns null (no request made).' );
+
+		// Guard: a non-hex digest returns null before any network call.
+		$prov = new \WWU\WithdrawalButton\Timestamp\Rfc3161Provider( array( 'endpoint' => 'http://timestamp.sectigo.com' ) );
+		$tests[] = $this->assert( 'rfc3161.bad_hex_null', null === $prov->stamp( 'not-a-hex' ), 'Non-hex digest returns null.' );
+
+		// Pure-logic checks via reflection (no network).
+		try {
+			$ref    = new \ReflectionClass( $prov );
+			$build  = $ref->getMethod( 'build_request' );
+			$build->setAccessible( true );
+			$status = $ref->getMethod( 'read_status' );
+			$status->setAccessible( true );
+
+			$digest = hash( 'sha256', 'wwu', true );
+			$der    = (string) $build->invoke( $prov, $digest, "\x12\x34\x56\x78" );
+
+			$tests[] = $this->assert( 'rfc3161.request_is_sequence', isset( $der[0] ) && "\x30" === $der[0], 'TimeStampReq is a DER SEQUENCE.' );
+			$tests[] = $this->assert( 'rfc3161.request_has_sha256_oid', false !== strpos( $der, "\x06\x09\x60\x86\x48\x01\x65\x03\x04\x02\x01" ), 'Request carries the SHA-256 OID.' );
+			$tests[] = $this->assert( 'rfc3161.request_embeds_digest', false !== strpos( $der, $digest ), 'Request embeds the 32-byte digest.' );
+
+			// SEQUENCE { SEQUENCE { INTEGER n } } — PKIStatus.
+			$tests[] = $this->assert( 'rfc3161.status_granted', 0 === $status->invoke( $prov, "\x30\x06\x30\x03\x02\x01\x00" ), 'Parses PKIStatus 0 (granted).' );
+			$tests[] = $this->assert( 'rfc3161.status_rejected', 2 === $status->invoke( $prov, "\x30\x06\x30\x03\x02\x01\x02" ), 'Parses PKIStatus 2 (rejection).' );
+			$tests[] = $this->assert( 'rfc3161.status_garbage_null', null === $status->invoke( $prov, 'xx' ), 'Garbage response yields null status.' );
+		} catch ( \Throwable $e ) {
+			$tests[] = $this->assert( 'rfc3161.reflection', false, 'Reflection check failed: ' . $e->getMessage() );
+		}
+
+		return array(
+			'name'  => 'rfc3161',
+			'tests' => $tests,
+		);
+	}
+
 	private function assert( string $name, bool $condition, string $output ): array {
 		return array(
 			'name'   => $name,
