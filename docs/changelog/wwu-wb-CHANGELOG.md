@@ -5,6 +5,21 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### F3 — Durable medium (1.0.0-alpha.3, 2026-06-13)
+- `ConfirmationDispatcher` listens on `wwu_wb_withdrawal_confirmed` and sends the
+  acknowledgement of receipt synchronously (Art. 11a(4) "without undue delay"),
+  reproducing the statement content + exact submission date/time.
+- `PdfBuilder` (Dompdf, LGPL-2.1; `isRemoteEnabled=false`, DejaVu Sans, A4) with
+  graceful degradation to email-only when the vendor dir is absent. Dompdf v3.1.5
+  added via Composer (`composer.lock` committed; `vendor/` gitignored).
+- `ReceiptStore` (protected uploads dir, .htaccess deny + uid-named files),
+  `VerifiableLink` (stable HMAC token), `ReceiptBuilder` (trader/Annex-I-B-style
+  data), `Mailer` (HTML + attachment). Locale-switched to the consumer's language.
+- REST `/receipt/{uid}` (token-gated PDF stream) + `/verify/{uid}` (hash +
+  submission time + chain-integrity status), rate-limited, enumeration-safe.
+- Email/PDF templates (consumer, admin, PDF). Smoke suite `durable_medium`.
+- Lint clean.
+
 ### F1 — WooCommerce withdrawal flow (1.0.0-alpha.2, 2026-06-13)
 - Platform adapter layer: `OrderDataSource` interface + `NormalizedOrder` VO +
   HPOS-safe `WooCommerceAdapter` + `PlatformRegistry`; custom order status

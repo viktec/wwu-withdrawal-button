@@ -15,6 +15,7 @@ declare( strict_types=1 );
 namespace WWU\WithdrawalButton\Core;
 
 use WWU\WithdrawalButton\Admin\AdminController;
+use WWU\WithdrawalButton\DurableMedium\ConfirmationDispatcher;
 use WWU\WithdrawalButton\Frontend\Assets;
 use WWU\WithdrawalButton\Frontend\WooMyAccount;
 use WWU\WithdrawalButton\Platform\WooCommerce\OrderStatus;
@@ -124,6 +125,9 @@ final class Plugin {
 
 		// Frontend assets (gated internally; the enqueue hook only fires on the front end).
 		( new Assets() )->register();
+
+		// Durable-medium acknowledgement: listens on wwu_wb_withdrawal_confirmed.
+		( new ConfirmationDispatcher() )->register();
 
 		if ( is_admin() ) {
 			$this->admin = new AdminController();

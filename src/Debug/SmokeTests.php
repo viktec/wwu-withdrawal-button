@@ -41,8 +41,9 @@ final class SmokeTests {
 		'audience'      => 'suite_audience',
 		'labels'        => 'suite_labels',
 		'applicability' => 'suite_applicability',
-		'window'        => 'suite_window',
-		'log'           => 'suite_log',
+		'window'         => 'suite_window',
+		'log'            => 'suite_log',
+		'durable_medium' => 'suite_durable_medium',
 	);
 
 	/**
@@ -347,6 +348,39 @@ final class SmokeTests {
 		// Verify the live chain is intact (0 = no broken row).
 		$broken = ( new \WWU\WithdrawalButton\Storage\LogRepository() )->verify_chain();
 		$tests[] = $this->assert( 'log.chain_intact', 0 === $broken, 0 === $broken ? 'Live chain intact.' : 'Chain broken at row ' . $broken . '.' );
+
+		return $tests;
+	}
+
+	/**
+	 * Suite: durable_medium (link token round-trip, PDF availability, store path).
+	 *
+	 * @return array
+	 */
+	private function suite_durable_medium(): array {
+		$tests = array();
+		$uid   = '00000000-0000-4000-8000-000000000000';
+
+		$token = \WWU\WithdrawalButton\DurableMedium\VerifiableLink::token( $uid );
+		$tests[] = $this->assert(
+			'durable_medium.link_token_roundtrip',
+			\WWU\WithdrawalButton\DurableMedium\VerifiableLink::verify( $uid, $token ) && ! \WWU\WithdrawalButton\DurableMedium\VerifiableLink::verify( $uid, $token . 'x' ),
+			'Receipt link token verifies and rejects tampering.'
+		);
+
+		$available = \WWU\WithdrawalButton\DurableMedium\PdfBuilder::is_available();
+		$tests[] = array(
+			'name'   => 'durable_medium.pdf_library',
+			'status' => $available ? 'pass' : 'skip',
+			'output' => $available ? 'Dompdf available — PDF receipts enabled.' : 'Dompdf not installed (run composer install). Email-only durable medium still works.',
+		);
+
+		$path = ( new \WWU\WithdrawalButton\DurableMedium\ReceiptStore() )->path_for( $uid );
+		$tests[] = $this->assert(
+			'durable_medium.store_path',
+			false !== strpos( $path, 'wwu-wb/receipts' ) && false !== strpos( $path, $uid . '.pdf' ),
+			'Receipt store path is confined and uid-named.'
+		);
 
 		return $tests;
 	}
