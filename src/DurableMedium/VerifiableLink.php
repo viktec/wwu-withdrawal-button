@@ -29,7 +29,7 @@ final class VerifiableLink {
 	 * @return string
 	 */
 	public static function token( string $request_uid ): string {
-		$secret = (string) get_option( 'wwu_wb_secret', '' );
+		$secret = \WWU\WithdrawalButton\Security\Secret::get();
 		return substr( hash_hmac( 'sha256', 'receipt|' . $request_uid, $secret ), 0, 40 );
 	}
 

@@ -268,15 +268,10 @@ final class Install {
 	 * @return void
 	 */
 	private static function ensure_secret(): void {
-		if ( get_option( 'wwu_wb_secret' ) ) {
-			return;
-		}
-		try {
-			$secret = bin2hex( random_bytes( 32 ) );
-		} catch ( \Exception $e ) {
-			$secret = wp_generate_password( 64, true, true );
-		}
-		add_option( 'wwu_wb_secret', $secret, '', 'no' );
+		// Delegate to the central Secret accessor, which mints + persists the
+		// secret if it is missing (and is also the fail-safe used by every token
+		// gate at runtime, so the key is never an empty string).
+		\WWU\WithdrawalButton\Security\Secret::get();
 	}
 
 	/**

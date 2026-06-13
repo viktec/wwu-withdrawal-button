@@ -44,7 +44,7 @@ final class LogChain {
 	 * @return string
 	 */
 	public static function genesis(): string {
-		$secret = (string) get_option( 'wwu_wb_secret', '' );
+		$secret = \WWU\WithdrawalButton\Security\Secret::get();
 		return hash( 'sha256', 'wwu_wb_genesis|' . $secret );
 	}
 

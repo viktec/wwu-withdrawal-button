@@ -90,7 +90,7 @@ final class GuestAccess {
 	 * @return string
 	 */
 	private static function token( string $order_ref, string $email, int $bucket ): string {
-		$secret = (string) get_option( 'wwu_wb_secret', '' );
+		$secret = \WWU\WithdrawalButton\Security\Secret::get();
 		$data   = implode( '|', array( 'guest', $order_ref, strtolower( $email ), (string) $bucket ) );
 		return substr( hash_hmac( 'sha256', $data, $secret ), 0, 40 );
 	}
