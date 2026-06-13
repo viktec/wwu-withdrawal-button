@@ -37,6 +37,11 @@ $wwu_wb_token = isset( $_GET['access_token'] ) ? sanitize_text_field( wp_unslash
 
 	<h2 class="wwu-wb-form-title"><?php echo esc_html( $withdraw_label ); ?></h2>
 
+	<?php
+	// Reassuring, plain-language explanation of the process (UX + transparency).
+	echo \WWU\WithdrawalButton\Frontend\Template::render( 'partials/consumer-guidance.php' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the partial escapes its own output.
+	?>
+
 	<noscript>
 		<p class="wwu-wb-noscript"><?php esc_html_e( 'JavaScript is required to use the withdrawal form. You may also use the model withdrawal form provided in our terms.', 'wwu-withdrawal-button' ); ?></p>
 	</noscript>

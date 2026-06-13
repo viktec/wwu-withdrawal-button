@@ -32,6 +32,11 @@ $orders_url = isset( $orders_url ) ? (string) $orders_url : '';
 	 */
 	?>
 
+	<?php
+	// Reassuring, plain-language explanation of how withdrawal works.
+	echo \WWU\WithdrawalButton\Frontend\Template::render( 'partials/consumer-guidance.php' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- the partial escapes its own output.
+	?>
+
 	<?php if ( ! $logged_in ) : ?>
 
 		<p><?php esc_html_e( 'Enter your order number and the email you used at checkout to start a withdrawal. You can also use the link in your order confirmation email, or log in to your account.', 'wwu-withdrawal-button' ); ?></p>

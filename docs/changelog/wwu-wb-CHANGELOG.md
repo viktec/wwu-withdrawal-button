@@ -5,6 +5,23 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Consumer guidance + timestamp provider reference (1.0.0-alpha.17, 2026-06-14)
+- **Consumer "how withdrawal works" guidance** (`partials/consumer-guidance.php`)
+  shown wherever a consumer can start a withdrawal — the two-step form and the My
+  Account / public chooser: a short reassuring intro + a collapsible plain-language
+  explanation (14-day period, no reason needed, the two-step confirm, immediate
+  email acknowledgement, refund within 14 days same method, returning goods, Art.
+  59 exceptions, contact us). Improves UX and transparency/compliance. i18n.
+- **Timestamp providers reference in Settings**: a collapsible list of the main
+  providers with one-line blurbs and links to their official sites (OpenTimestamps,
+  Sectigo free/qualified, DigiCert, and per-country QTSPs Aruba/InfoCert, D-Trust,
+  Universign, FNMT, SwissSign) so the merchant can pick and paste the right
+  endpoint.
+- Audit follow-up: the `wwu_wb_timestamp` default seed now uses the nested
+  `rfc3161 => { endpoint, user, pass }` shape the code reads (was a dead
+  `rfc3161_url` key). RFC 3161 audit verdict was ship (2 low security notes
+  accepted: admin-config endpoint as trust boundary; nonce fallback entropy).
+
 ### RFC 3161 / eIDAS timestamp provider (1.0.0-alpha.16, 2026-06-14)
 - **New `Rfc3161Provider`** for the pluggable timestamp layer: sends the log
   row's SHA-256 to an RFC 3161 Time-Stamp Authority and stores the signed token.

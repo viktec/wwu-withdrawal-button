@@ -194,8 +194,12 @@ final class Install {
 		add_option(
 			'wwu_wb_timestamp',
 			array(
-				'provider'    => 'opentimestamps',
-				'rfc3161_url' => '',
+				'provider' => 'opentimestamps',
+				'rfc3161'  => array(
+					'endpoint' => '',
+					'user'     => '',
+					'pass'     => '',
+				),
 			),
 			'',
 			'no'

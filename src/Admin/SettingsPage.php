@@ -249,6 +249,8 @@ final class SettingsPage {
 		echo '<p class="description">' . esc_html__( 'Basic-auth username/password, only required by paid qualified providers. Free TSAs need none. The password is stored on your server and never shown again.', 'wwu-withdrawal-button' ) . '</p>';
 		echo '</td></tr>';
 
+		$this->render_timestamp_reference();
+
 		echo '<tr><th scope="row">' . esc_html__( 'My Account tab slug', 'wwu-withdrawal-button' ) . '</th><td>';
 		echo '<input type="text" name="endpoint_slug" class="regular-text" value="' . esc_attr( $slug ) . '" />';
 		echo '<p class="description">' . esc_html__( 'The URL slug of the "Right of withdrawal" tab in the customer account. Change only if it conflicts.', 'wwu-withdrawal-button' ) . '</p>';
@@ -262,6 +264,41 @@ final class SettingsPage {
 		echo '</td></tr>';
 
 		echo '</tbody></table>';
+	}
+
+	/**
+	 * Render a collapsible reference of timestamp providers with links.
+	 *
+	 * Short blurbs so the merchant can pick a free option or their national
+	 * qualified provider and paste the right RFC 3161 endpoint.
+	 *
+	 * @return void
+	 */
+	private function render_timestamp_reference(): void {
+		// [ name, one-line description, official site ].
+		$refs = array(
+			array( 'OpenTimestamps', __( 'Free, Bitcoin-anchored, no account — the default. Proof completes after a block (~hours).', 'wwu-withdrawal-button' ), 'https://opentimestamps.org' ),
+			array( 'Sectigo', __( 'Free RFC 3161. Its /qualified endpoint is eIDAS-qualified and needs no account — recommended free option.', 'wwu-withdrawal-button' ), 'https://www.sectigo.com/resource-library/time-stamping-server' ),
+			array( 'DigiCert', __( 'Free RFC 3161 timestamp authority, no account: http://timestamp.digicert.com', 'wwu-withdrawal-button' ), 'https://knowledge.digicert.com/general-information/rfc3161-compliant-time-stamp-authority-server' ),
+			array( 'Aruba (IT)', __( 'Italian eIDAS-qualified timestamp (marca temporale). Paid account; widely accepted in Italy.', 'wwu-withdrawal-button' ), 'https://www.aruba.it/marca-temporale.aspx' ),
+			array( 'InfoCert (IT)', __( 'Italian eIDAS-qualified timestamp. Paid account.', 'wwu-withdrawal-button' ), 'https://www.infocert.it' ),
+			array( 'D-Trust (DE)', __( 'German eIDAS-qualified timestamp (Bundesdruckerei). Account required.', 'wwu-withdrawal-button' ), 'https://www.d-trust.net' ),
+			array( 'Universign (FR)', __( 'French eIDAS-qualified timestamp. Account required.', 'wwu-withdrawal-button' ), 'https://www.universign.com' ),
+			array( 'FNMT (ES)', __( 'Spanish eIDAS-qualified timestamp (national mint). Registration required.', 'wwu-withdrawal-button' ), 'https://www.sede.fnmt.gob.es' ),
+			array( 'SwissSign (CH)', __( 'Swiss ZertES-qualified timestamp. Account required.', 'wwu-withdrawal-button' ), 'https://www.swisssign.com' ),
+		);
+
+		echo '<tr><th scope="row"></th><td>';
+		echo '<details class="wwu-wb-clause"><summary><strong>' . esc_html__( 'Timestamp providers — which to choose', 'wwu-withdrawal-button' ) . '</strong></summary>';
+		echo '<ul style="margin:0.8em 0 0;padding-left:1.2em;max-width:760px;">';
+		foreach ( $refs as $r ) {
+			echo '<li style="margin-bottom:0.5em;"><strong>' . esc_html( $r[0] ) . '</strong> — ' . esc_html( $r[1] )
+				. ' <a href="' . esc_url( $r[2] ) . '" target="_blank" rel="noopener noreferrer">' . esc_html__( 'site', 'wwu-withdrawal-button' ) . ' &#8599;</a></li>';
+		}
+		echo '</ul>';
+		echo '<p class="description">' . esc_html__( 'Any RFC 3161 authority works — paste its endpoint above and add credentials if it is account-based. Running OpenTimestamps and an RFC 3161 token together gives two independent proofs.', 'wwu-withdrawal-button' ) . '</p>';
+		echo '</details>';
+		echo '</td></tr>';
 	}
 
 	/**

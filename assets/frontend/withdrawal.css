@@ -240,6 +240,43 @@
 	margin: var(--wwu-wb-spacing) 0;
 }
 
+/* Consumer "how it works" guidance block. */
+.wwu-wb-guidance {
+	margin: 0 0 1.2em;
+	padding: 0.9em 1.1em;
+	background: var(--wwu-wb-notice-bg);
+	border-left: 4px solid var(--wwu-wb-notice-accent);
+	border-radius: var(--wwu-wb-field-radius);
+}
+
+.wwu-wb-guidance__intro {
+	margin: 0;
+}
+
+.wwu-wb-guidance__details {
+	margin-top: 0.6em;
+}
+
+.wwu-wb-guidance__details summary {
+	cursor: pointer;
+	font-weight: 600;
+}
+
+.wwu-wb-guidance__list {
+	margin: 0.8em 0 0.4em;
+	padding-left: 1.3em;
+}
+
+.wwu-wb-guidance__list li {
+	margin-bottom: 0.5em;
+}
+
+.wwu-wb-guidance__help {
+	margin: 0.4em 0 0;
+	font-size: 0.9rem;
+	color: var(--wwu-wb-note-color);
+}
+
 /* Trap #19 twin rule: keep [hidden] effective even if a theme sets display. */
 .wwu-wb-form-wrap [hidden] {
 	display: none !important;
