@@ -126,6 +126,19 @@ final class Plugin {
 			( new OrderStatus() )->register();
 			( new WooMyAccount() )->register();
 			( new \WWU\WithdrawalButton\Mail\OrderEmailLink() )->register();
+
+			// Register the acknowledgement as a first-class WC_Email so it appears
+			// under WooCommerce → Emails (branding + customiser + theme override).
+			// The callback instantiates WooAckEmail lazily, only when WooCommerce
+			// fires the filter — by which point \WC_Email is guaranteed loaded, so
+			// the class (which extends \WC_Email) is never autoloaded too early.
+			add_filter(
+				'woocommerce_email_classes',
+				static function ( $emails ) {
+					$emails[ \WWU\WithdrawalButton\Mail\WooAckEmail::CLASS_KEY ] = new \WWU\WithdrawalButton\Mail\WooAckEmail();
+					return $emails;
+				}
+			);
 		}
 
 		// FluentCart portal injection when FluentCart is active.

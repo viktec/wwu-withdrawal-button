@@ -5,6 +5,25 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### WooCommerce email integration (1.0.0-alpha.12, 2026-06-14)
+- The consumer **acknowledgement of receipt is now a first-class `WC_Email`**
+  (`WooAckEmail`, id `wwu_wb_withdrawal_ack`). It appears under WooCommerce →
+  Settings → Emails, inherits the store's email branding (logo, base colour,
+  header/footer), is customisable (subject, heading, additional content, email
+  type) and template-overridable in the theme at
+  `woocommerce/emails/wwu-wb-withdrawal-ack.php` (+ `plain/`).
+- **Delivery routing** in `ConfirmationDispatcher`: on WooCommerce it sends the
+  branded WC email when the merchant has it enabled; otherwise (FluentCart, WC
+  absent, or the email disabled) it falls back to the plain standalone mailer.
+  Because the acknowledgement is legally mandatory, the WooCommerce enable/disable
+  toggle controls only the *styling/integration* — it never stops the email from
+  being sent. The `receipt_failed` log + admin notice still fire if neither path
+  delivers.
+- Locale stays the consumer's (the dispatcher's `switch_to_locale()` owns it; the
+  WC email deliberately does not call `setup_locale()`). The PDF receipt is passed
+  through as the email attachment when available.
+- Reviewed by parallel security + correctness sub-agents.
+
 ### Email diagnostics + onboarding rework (1.0.0-alpha.11, 2026-06-14)
 - **Decoupled the PDF from the send**: `ConfirmationDispatcher` now guards the
   optional PDF render/store with `PdfBuilder::is_available()`. A missing Dompdf

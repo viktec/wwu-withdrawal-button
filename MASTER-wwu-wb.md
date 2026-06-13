@@ -3,11 +3,11 @@
 > Single index for the **WWU Withdrawal Button** plugin: the EU online right-of-withdrawal function ("withdrawal button", Art. 11a / Art. 54-bis) for WooCommerce & FluentCart. One line per doc; never put content here.
 
 - **Slug:** `wwu-wb` · **Folder:** `wwu-withdrawal-button`
-- **Status:** **MVP feature-complete** (F0–F8 + audit hardening) on branch `claude/mvp-implementation` ([PR #1](https://github.com/An-Idea-For-Business/wwu-withdrawal-button/pull/1)) — awaiting user testing/merge. Current build `1.0.0-alpha.7`.
+- **Status:** **MVP feature-complete** (F0–F8 + audit hardening) on branch `claude/mvp-implementation` ([PR #1](https://github.com/An-Idea-For-Business/wwu-withdrawal-button/pull/1)) — in live testing. Current build `1.0.0-alpha.12`.
 - **Target version:** `1.0.0` · **License:** GPL-3.0-or-later
 - **Credits:** mredodos · Matteo Alfieri (An Idea for Business) · WebWakeUp ([webwakeup.it](https://webwakeup.it))
 - **Legal go-live:** **2026-06-19** (contracts concluded on/after)
-- **Last updated:** 2026-06-13
+- **Last updated:** 2026-06-14
 
 ## What it is (one paragraph)
 A free, open-source WordPress plugin that makes a store compliant with Directive (EU) 2023/2673 (new Art. 11a of the Consumer Rights Directive 2011/83/EU; Italy: Art. 54-bis Codice del Consumo via D.Lgs. 209/2025): a prominently displayed, continuously available, statutory-labelled withdrawal button → two-step statement + confirmation → durable-medium acknowledgement (email + PDF + verifiable link) → tamper-evident immutable log anchored to OpenTimestamps. Dual platform (WooCommerce HPOS+legacy / FluentCart), multilingual (IT/EN/FR/ES/DE + extensible), Complianz/TranslatePress-compatible, shortcodes + blocks, plus generators for the Annex I-B model form and Privacy/Terms/pre-contractual clauses.

@@ -108,8 +108,27 @@ final class ConfirmationDispatcher {
 			$data
 		);
 
+		// Delivery routing.
+		//
+		// On WooCommerce, prefer the integrated WC_Email (branded header/footer +
+		// customisable subject/heading + theme override) when the merchant has it
+		// enabled under WooCommerce → Emails. If WooCommerce is absent (FluentCart),
+		// the WC email is missing, or the merchant disabled it, we fall back to the
+		// plain standalone mailer so the legally-required acknowledgement always
+		// goes out — the WC toggle controls styling, never whether it is sent.
+		$sent = false;
+		if ( 'woocommerce' === $order->platform && function_exists( 'WC' ) && WC() && method_exists( WC(), 'mailer' ) ) {
+			$wc_emails = WC()->mailer()->get_emails();
+			$key       = \WWU\WithdrawalButton\Mail\WooAckEmail::CLASS_KEY;
+			if ( isset( $wc_emails[ $key ] ) && method_exists( $wc_emails[ $key ], 'trigger' ) ) {
+				$sent = (bool) $wc_emails[ $key ]->trigger( $data, (string) $email['to'], (array) $email['attachments'] );
+			}
+		}
+
 		$mailer = new Mailer();
-		$sent   = $mailer->send_html( (string) $email['to'], (string) $email['subject'], (string) $email['html'], (array) $email['attachments'] );
+		if ( ! $sent ) {
+			$sent = $mailer->send_html( (string) $email['to'], (string) $email['subject'], (string) $email['html'], (array) $email['attachments'] );
+		}
 
 		if ( ! $sent ) {
 			// The acknowledgement MUST reach the consumer (Art. 11a(4)). Record the
