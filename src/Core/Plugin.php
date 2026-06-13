@@ -127,6 +127,11 @@ final class Plugin {
 			( new WooMyAccount() )->register();
 		}
 
+		// FluentCart portal injection when FluentCart is active.
+		if ( null !== $services->platforms->get( 'fluentcart' ) ) {
+			( new \WWU\WithdrawalButton\Frontend\FluentCartPortal() )->register();
+		}
+
 		// Frontend assets (gated internally; the enqueue hook only fires on the front end).
 		( new Assets() )->register();
 
