@@ -44,7 +44,39 @@ final class Assets {
 		if ( ! $this->should_enqueue() ) {
 			return;
 		}
+		$this->do_enqueue();
+	}
 
+	/**
+	 * Force the frontend bundle to load, bypassing the context gate.
+	 *
+	 * Used by surfaces the standard gate cannot detect — notably the FluentCart
+	 * customer portal, whose page is a Vue SPA injected server-side. Safe to call
+	 * more than once: WordPress de-duplicates by handle. Still respects the master
+	 * "enabled" switch and the "a platform is active" precondition so a disabled
+	 * plugin never ships assets.
+	 *
+	 * @return void
+	 */
+	public function ensure(): void {
+		if ( ! \WWU\WithdrawalButton\Core\Settings::enabled() ) {
+			return;
+		}
+		if ( ! Services::instance()->platforms->has_active() ) {
+			return;
+		}
+		if ( wp_style_is( 'wwu-wb-frontend', 'enqueued' ) ) {
+			return;
+		}
+		$this->do_enqueue();
+	}
+
+	/**
+	 * Register and enqueue the CSS+JS bundle and its localized data.
+	 *
+	 * @return void
+	 */
+	private function do_enqueue(): void {
 		// Register the Complianz marker filter only on pages that actually load our
 		// script, so it does not run on every script tag site-wide.
 		add_filter( 'script_loader_tag', array( $this, 'mark_script_tag' ), 10, 2 );

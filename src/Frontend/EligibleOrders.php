@@ -4,11 +4,12 @@
  * withdrawal function: those eligible to start a withdrawal now, plus those that
  * already have a withdrawal request (shown with their status).
  *
- * Shared by the My Account "Right of withdrawal" tab (WooMyAccount) and the
- * public [wwu_wb_form] page when it is opened without a specific order, so both
- * surfaces present the customer with something actionable instead of an empty
- * page. WooCommerce-scoped (FluentCart has its own portal); returns '' when no
- * WooCommerce order source is available.
+ * Shared by the WooCommerce My Account "Right of withdrawal" tab (WooMyAccount),
+ * the FluentCart customer-portal endpoint (FluentCartPortal) and the public
+ * [wwu_wb_form] page when opened without a specific order, so every surface
+ * presents the customer with something actionable instead of an empty page.
+ * Platform-agnostic: it merges the customer's WooCommerce and FluentCart orders,
+ * each source guarded so an inactive platform simply contributes nothing.
  *
  * @package WWU\WithdrawalButton
  */
@@ -43,7 +44,9 @@ final class EligibleOrders {
 	 * @return string
 	 */
 	public static function render_for_user( int $user_id ): string {
-		$rows = self::collect( $user_id );
+		// Merge orders from every active platform so a customer sees their
+		// WooCommerce AND FluentCart orders in one chooser.
+		$rows = array_merge( self::collect_woocommerce( $user_id ), self::collect_fluentcart( $user_id ) );
 
 		return Template::render(
 			'myaccount/withdrawal-list.php',
@@ -56,12 +59,89 @@ final class EligibleOrders {
 	}
 
 	/**
-	 * Collect the relevant order rows for a user.
+	 * Collect the customer's withdrawal-relevant FluentCart orders.
 	 *
 	 * @param int $user_id Current user id.
 	 * @return array<int,array<string,mixed>>
 	 */
-	private static function collect( int $user_id ): array {
+	private static function collect_fluentcart( int $user_id ): array {
+		if ( $user_id <= 0 ) {
+			return array();
+		}
+		$adapter = Services::instance()->platforms->get( 'fluentcart' );
+		if ( ! $adapter ) {
+			return array();
+		}
+		$customer_model = '\\FluentCart\\App\\Models\\Customer';
+		$order_model    = '\\FluentCart\\App\\Models\\Order';
+		if ( ! class_exists( $customer_model ) || ! class_exists( $order_model ) ) {
+			return array();
+		}
+
+		$rows = array();
+		try {
+			$customer = $customer_model::where( 'user_id', $user_id )->first();
+			if ( ! $customer || ! isset( $customer->id ) ) {
+				return array();
+			}
+			$orders = $order_model::where( 'customer_id', $customer->id )
+				->orderBy( 'created_at', 'desc' )
+				->take( self::SCAN_LIMIT )
+				->get();
+		} catch ( \Throwable $e ) {
+			return array();
+		}
+
+		$services = Services::instance();
+		$enabled  = Settings::enabled();
+
+		foreach ( (array) $orders as $fc_order ) {
+			$order_id = isset( $fc_order->id ) ? (string) $fc_order->id : '';
+			if ( '' === $order_id ) {
+				continue;
+			}
+			$order = $adapter->get_order( $order_id );
+			if ( ! $order ) {
+				continue;
+			}
+
+			$status    = (string) $adapter->get_meta( $order->order_ref, 'status' );
+			$processed = (string) $adapter->get_meta( $order->order_ref, 'processed_at' );
+			$eligible  = $enabled && $services->applicability->decide( $order )->show;
+
+			if ( '' === $status && ! $eligible ) {
+				continue;
+			}
+
+			if ( '' !== $processed ) {
+				$status_label = __( 'Withdrawal handled', 'wwu-withdrawal-button' );
+			} elseif ( '' !== $status ) {
+				$status_label = __( 'Withdrawal requested', 'wwu-withdrawal-button' );
+			} else {
+				$status_label = '';
+			}
+
+			$locale = '' !== $order->locale ? $order->locale : determine_locale();
+			$rows[] = array(
+				'number'   => (string) $order->number,
+				'date'     => $order->created ? wp_date( (string) get_option( 'date_format', 'Y-m-d' ), $order->created->getTimestamp() ) : '',
+				'status'   => $status_label,
+				'eligible' => $eligible,
+				'url'      => self::form_url( $order->order_ref ),
+				'label'    => $services->labels->withdraw_label( $order->country, $locale ),
+			);
+		}
+
+		return $rows;
+	}
+
+	/**
+	 * Collect the customer's withdrawal-relevant WooCommerce orders.
+	 *
+	 * @param int $user_id Current user id.
+	 * @return array<int,array<string,mixed>>
+	 */
+	private static function collect_woocommerce( int $user_id ): array {
 		if ( $user_id <= 0 || ! function_exists( 'wc_get_orders' ) ) {
 			return array();
 		}

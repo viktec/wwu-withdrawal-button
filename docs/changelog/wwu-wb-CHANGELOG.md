@@ -5,6 +5,38 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### FluentCart customer-portal integration (1.0.0-alpha.18, 2026-06-14)
+- **Fix: FluentCart customers now see the withdrawal flow.** Previously the
+  FluentCart side wired only a single, unverified order-details filter and the
+  account chooser was WooCommerce-only, so a FluentCart store showed nothing in
+  the customer account. Re-built on FluentCart's documented server-side hooks
+  (dev.fluentcart.com), all defensive about array shape so a future key rename
+  degrades to "surface absent" instead of fataling:
+  - `fluent_cart/customer_portal/custom_endpoints` — a dedicated **"Right of
+    withdrawal"** portal page rendering the order chooser + two-step form.
+  - `fluent_cart/global_customer_menu_items` — a sidebar entry linking to it.
+  - `fluent_cart/customer_dashboard_data` — a reassuring banner above the orders
+    table (`before_orders_table` slot).
+  - `fluent_cart/customer/order_details_section_parts` — the per-order button,
+    moved to the recommended **`after_summary`** slot (was `end_of_order`) and
+    reading the order model from `$context['order']`.
+  - `fluent_cart/email_notification_merge_tags` — a `{{wwu.recesso_url}}` merge
+    tag for FluentCart's transactional emails.
+- **`EligibleOrders` is now platform-agnostic**: it merges the customer's
+  WooCommerce *and* FluentCart orders (querying FluentCart's `Customer`/`Order`
+  models by `user_id`), each source guarded so an inactive platform contributes
+  nothing. Running WooCommerce + FluentCart together is fully supported — the two
+  surfaces register independently; reactivation is not required.
+- **`Assets::ensure()`** (new public method) force-loads the frontend CSS/JS on
+  the FluentCart portal — a server-rendered Vue SPA the standard context gate
+  can't detect — still respecting the master "enabled" switch and de-duplicating
+  by handle. The portal page is also detected heuristically via its shortcode/
+  block marker for the normal `wp_enqueue_scripts` path.
+- Withdrawal status/`processed_at` are persisted per-order by the
+  platform-agnostic `WithdrawalService` through the adapter, so the localized
+  status pill ("Withdrawal requested" / "handled") works identically on
+  FluentCart and WooCommerce.
+
 ### Consumer guidance + timestamp provider reference (1.0.0-alpha.17, 2026-06-14)
 - **Consumer "how withdrawal works" guidance** (`partials/consumer-guidance.php`)
   shown wherever a consumer can start a withdrawal — the two-step form and the My
