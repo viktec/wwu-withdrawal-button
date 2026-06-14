@@ -5,6 +5,25 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Smoke-test runner fixed + FluentCart regression tests (1.0.0-alpha.22, 2026-06-14)
+- **Inspector smoke-test runner was dead** (`TypeError: (suite.tests || []).forEach is
+  not a function` on "Run ALL"). Root cause: `suite_rfc3161()` returned the already-
+  wrapped `{name, tests}` shape while every other suite returns a flat array, so `run()`
+  double-wrapped it and `tests` serialized to a JSON **object** (no `.forEach`). Fixed the
+  suite to return the flat array; hardened `inspector.js` to coerce any object-shaped
+  `tests`/`suites` to an array (`toArray()`), so a single malformed suite can never again
+  break the whole report.
+- **No more drift between suites and UI buttons.** The Inspector button row was a
+  hardcoded list missing `rfc3161`; it now derives from `SmokeTests::suite_names()`.
+- **New `fluentcart` smoke suite** covering the alpha.20/.21 bugs as regressions, without
+  needing FluentCart active: the Eloquent-collection unwrap (`->all()` vs `(array)`
+  internals), array/scalar edge cases, and the `payment_status` → eligible-status mapping.
+  Extracted `FluentCartAdapter::unwrap_collection()` + `::eligible_status()` as pure static
+  helpers (now the single source used by the adapter, the chooser and the diagnostic).
+- **Applicability suite extended** with three regressions: empty/unreadable items default
+  to withdrawable, a `paid` status is an eligible concluded contract, and an empty country
+  is out-of-scope (hidden) in the default EU-only mode.
+
 ### FluentCart orders now appear — Eloquent collection iteration fix (1.0.0-alpha.21, 2026-06-14)
 The admin diagnostic (alpha.20) pinpointed the real reason FluentCart orders never
 reached the chooser: `collect_fluentcart()` iterated the orders with `foreach

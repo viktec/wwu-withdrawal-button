@@ -45,7 +45,18 @@ final class SmokeTests {
 		'log'            => 'suite_log',
 		'durable_medium' => 'suite_durable_medium',
 		'rfc3161'        => 'suite_rfc3161',
+		'fluentcart'     => 'suite_fluentcart',
 	);
+
+	/**
+	 * List the available suite names (single source of truth for the UI buttons,
+	 * so the Inspector never drifts out of sync with the registered suites).
+	 *
+	 * @return string[]
+	 */
+	public static function suite_names(): array {
+		return array_keys( self::SUITES );
+	}
 
 	/**
 	 * Run a suite ('all' or a specific name) and return the canonical report.
@@ -298,6 +309,59 @@ final class SmokeTests {
 		$tests[] = $this->assert( 'applicability.b2b_excluded', ! $d_b2b->show, 'B2B (VAT) excluded (reason: ' . $d_b2b->reason . ').' );
 		$tests[] = $this->assert( 'applicability.art59_digital_excluded', ! $d_dig->show, 'Completed digital-only order excluded (reason: ' . $d_dig->reason . ').' );
 
+		// Regression (alpha.20): an order with NO readable items must still be
+		// withdrawable by default — the right is the default, Art.59 is the exception.
+		$d_noitem = $resolver->decide( $this->fake_order( 'IT', 'paid', false, array() ) );
+		$tests[]  = $this->assert( 'applicability.empty_items_withdrawable', $d_noitem->show, 'Order with no readable items defaults to withdrawable (reason: ' . $d_noitem->reason . ').' );
+
+		// Regression (alpha.20): FluentCart signals a concluded contract via a 'paid'
+		// status — it must read as an eligible, mandatory case for an EU consumer.
+		$d_paid  = $resolver->decide( $this->fake_order( 'IT', 'paid', false, array( $this->fake_item( false ) ) ) );
+		$tests[] = $this->assert( 'applicability.paid_status_eligible', $d_paid->show && $d_paid->mandatory, "'paid' status is an eligible concluded contract." );
+
+		// Regression (alpha.20): an undeterminable country is out of scope (hidden)
+		// in the default eu_eea_only mode.
+		$d_noc   = $resolver->decide( $this->fake_order( '', 'paid', false, array( $this->fake_item( false ) ) ) );
+		$tests[] = $this->assert( 'applicability.empty_country_out_of_scope', ! $d_noc->show && 'out_of_scope' === $d_noc->reason, 'Empty country → out_of_scope/hidden (reason: ' . $d_noc->reason . ').' );
+
+		return $tests;
+	}
+
+	/**
+	 * Suite: fluentcart (platform-agnostic adapter helpers — Eloquent collection
+	 * unwrap + payment-status normalization). Runs without FluentCart active.
+	 *
+	 * @return array
+	 */
+	private function suite_fluentcart(): array {
+		$tests   = array();
+		$adapter = '\\WWU\\WithdrawalButton\\Platform\\FluentCartAdapter';
+
+		// Collection unwrap: a fake Eloquent-like collection exposing ->all().
+		$collection = new class() {
+			/**
+			 * Mimic Illuminate\Support\Collection::all().
+			 *
+			 * @return array
+			 */
+			public function all(): array {
+				return array( (object) array( 'id' => 7 ), (object) array( 'id' => 8 ) );
+			}
+		};
+		$unwrapped = $adapter::unwrap_collection( $collection );
+		$tests[]   = $this->assert(
+			'fluentcart.collection_unwrap',
+			is_array( $unwrapped ) && 2 === count( $unwrapped ) && isset( $unwrapped[0]->id ) && 7 === $unwrapped[0]->id,
+			'Eloquent collection unwrapped to its models via ->all() (not (array) internals).'
+		);
+		$tests[] = $this->assert( 'fluentcart.unwrap_array_passthrough', array( 'a', 'b' ) === $adapter::unwrap_collection( array( 'a', 'b' ) ), 'Plain array passes through unwrap.' );
+		$tests[] = $this->assert( 'fluentcart.unwrap_scalar_empty', array() === $adapter::unwrap_collection( 'x' ), 'Scalar unwraps to empty array (no crash).' );
+
+		// Status: payment_status drives eligibility.
+		$tests[] = $this->assert( 'fluentcart.status_paid', 'paid' === $adapter::eligible_status( 'pending', 'paid' ), 'pending fulfillment + paid payment → "paid" (eligible).' );
+		$tests[] = $this->assert( 'fluentcart.status_keep_completed', 'completed' === $adapter::eligible_status( 'completed', 'paid' ), 'completed fulfillment preserved.' );
+		$tests[] = $this->assert( 'fluentcart.status_unpaid', 'pending' === $adapter::eligible_status( 'pending', 'unpaid' ), 'unpaid order keeps its non-eligible status.' );
+
 		return $tests;
 	}
 
@@ -480,10 +544,10 @@ final class SmokeTests {
 			$tests[] = $this->assert( 'rfc3161.reflection', false, 'Reflection check failed: ' . $e->getMessage() );
 		}
 
-		return array(
-			'name'  => 'rfc3161',
-			'tests' => $tests,
-		);
+		// Return the flat test array like every other suite — run() wraps it in
+		// { name, tests }. Returning the wrapped shape here double-wrapped it, so
+		// the JSON `tests` became an object and the Inspector's forEach threw.
+		return $tests;
 	}
 
 	private function assert( string $name, bool $condition, string $output ): array {

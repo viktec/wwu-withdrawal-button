@@ -47,6 +47,54 @@ final class FluentCartAdapter implements OrderDataSource {
 	}
 
 	/**
+	 * Map a FluentCart order's fulfillment + payment status to the normalized
+	 * status used for withdrawal eligibility.
+	 *
+	 * Eligibility presupposes a concluded (paid) contract. FluentCart signals this
+	 * via payment_status, not necessarily the fulfillment status (which may be
+	 * 'pending'). Surfaces 'paid' when paid, keeping completed/processing if set.
+	 * Pure + static so it is unit-testable without FluentCart active.
+	 *
+	 * @param string $fulfillment Order fulfillment status.
+	 * @param string $payment     Order payment status.
+	 * @return string
+	 */
+	public static function eligible_status( string $fulfillment, string $payment ): string {
+		$payment = strtolower( $payment );
+		$status  = $fulfillment;
+		if ( in_array( $payment, array( 'paid', 'partially_paid', 'partially-paid' ), true )
+			&& ! in_array( strtolower( $fulfillment ), array( 'completed', 'processing' ), true ) ) {
+			$status = 'paid';
+		}
+		return $status;
+	}
+
+	/**
+	 * Unwrap an Eloquent collection (or other value) to a plain array of models.
+	 *
+	 * Casting an Eloquent collection with (array) iterates the collection object's
+	 * internal properties, NOT its models — use ->all(). Arrays pass through,
+	 * Traversables are materialised, anything else yields an empty array. Pure +
+	 * static so it is unit-testable without FluentCart active.
+	 *
+	 * @param mixed $value Collection, array, Traversable or scalar.
+	 * @return array
+	 */
+	public static function unwrap_collection( $value ): array {
+		if ( is_object( $value ) && method_exists( $value, 'all' ) ) {
+			$all = $value->all();
+			return is_array( $all ) ? $all : array();
+		}
+		if ( is_array( $value ) ) {
+			return $value;
+		}
+		if ( $value instanceof \Traversable ) {
+			return iterator_to_array( $value );
+		}
+		return array();
+	}
+
+	/**
 	 * Load a FluentCart order model (guarded), cached per request.
 	 *
 	 * @param string $order_ref Order id.
@@ -192,15 +240,11 @@ final class FluentCartAdapter implements OrderDataSource {
 		// Withdrawal eligibility hinges on a concluded (PAID) contract, which
 		// FluentCart signals via payment_status — not necessarily the fulfillment
 		// status (which may still be 'pending'). The green "Paid" badge in the portal
-		// is the payment_status. Surface 'paid' when paid so the normalized status
-		// reads as eligible, while keeping completed/processing when already set.
-		$fulfillment = (string) ( $this->attr( $order, 'status' ) ?? '' );
-		$payment     = strtolower( (string) ( $this->attr( $order, 'payment_status' ) ?? '' ) );
-		$status      = $fulfillment;
-		if ( in_array( $payment, array( 'paid', 'partially_paid', 'partially-paid' ), true )
-			&& ! in_array( strtolower( $fulfillment ), array( 'completed', 'processing' ), true ) ) {
-			$status = 'paid';
-		}
+		// is the payment_status. {@see self::eligible_status()}.
+		$status = self::eligible_status(
+			(string) ( $this->attr( $order, 'status' ) ?? '' ),
+			(string) ( $this->attr( $order, 'payment_status' ) ?? '' )
+		);
 
 		$number = (string) ( $this->attr( $order, 'invoice_no' ) ?? $this->attr( $order, 'order_number' ) ?? $order_ref );
 
