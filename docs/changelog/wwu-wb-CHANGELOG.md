@@ -23,7 +23,9 @@ Acts on a direct FluentCart team reply (2026-06-15) confirming the integration m
 - **Confirmed, no code change:** custom fields ARE submitted inside the checkout `<form>` (unchecked
   checkboxes absent → treated as "no"); `$order->getViewUrl('admin')` route; `fluent_cart/order_paid`
   exists (use `order_paid_done` for async side-effects); `smartcode_fallback` 4-arg resolver signature
-  (for the still-deferred email merge-tag); custom-status + `effective_from` notes for future work.
+  (team-confirmed via reply but still absent from FluentCart's public hooks pages — support-claim-only
+  until publicly documented or live-tested; for the still-deferred email merge-tag); custom-status +
+  `effective_from` notes for future work.
 - **3 live-test checklists** under `docs/testing/` so anyone can run the remaining live tests —
   WooCommerce **block** Checkout, **FluentCart**, **EDD** — each with setup, happy-path, category-aware
   and fail-safe sections.

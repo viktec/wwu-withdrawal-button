@@ -47,12 +47,16 @@ Exemptions are matched by **product id _and_ category** (`product-categories` ta
 ### Verify the capture (admin)
 
 5. [ ] **Withdrawal Button → Consent records**: a new PII-free row for this order (product id,
-   reason, date, wording hash).
-6. [ ] **FluentCart → order** activity timeline shows the plugin's note
-   (*"Withdrawal evidence recorded"*) — written via `fluent_cart_add_log()`.
-7. [ ] The **consumer received the durable-medium e-mail** (subject ends with *"confirmation of
+   reason, date, wording hash). This is the **authoritative** consent record.
+6. [ ] The **consumer received the durable-medium e-mail** (subject ends with *"confirmation of
    your right of withdrawal"*). Its dispatch is logged as a separate
    `exemption_confirmation_sent` event.
+
+> Note: the FluentCart **order activity-timeline** note (*"Withdrawal evidence recorded"*, written via
+> `fluent_cart_add_log()` in alpha.34) is **not** written at checkout — it appears **later, when you
+> actually process a withdrawal request** on the order. To see it, run a withdrawal on this order from
+> **Withdrawal Button → Requests** and re-open the order in FluentCart. (Consent capture itself is
+> recorded in Consent records + the order's plugin meta + the durable-medium e-mail, as above.)
 
 ### Verify the effect on the button
 
@@ -81,7 +85,8 @@ Exemptions are matched by **product id _and_ category** (`product-categories` ta
 
 - [ ] Checkbox appears (above payment methods) only when a conditional-exempt item is in the cart.
 - [ ] Checkout is blocked until ticked.
-- [ ] After purchase: Consent records row **+** FluentCart activity-log note **+** durable-medium e-mail.
+- [ ] After purchase: Consent records row **+** durable-medium e-mail (the FluentCart activity-log
+  note is separate — it appears later, at withdrawal processing; see the note under Test A).
 - [ ] Category-tagged exemption matches as well as product-tagged (Test B).
 - [ ] Button hidden for the exempt item, kept otherwise; fail-safe holds in every "no capture" case.
 
@@ -92,6 +97,7 @@ Exemptions are matched by **product id _and_ category** (`product-categories` ta
   reason for the order/items.
 - **Box ticked but no Consent record** → capture runs on `prepare_other_data` reading the order's
   items; confirm no other plugin aborts that hook. The button still stays (fail-safe) — report it.
-- **No activity-log note** → `fluent_cart_add_log()` may be absent on your FluentCart build; the
-  plugin then falls back to the order's `addNote()` and finally to per-order meta. The consent is
-  still captured regardless of where the note lands.
+- **No activity-log note after processing a withdrawal** → `fluent_cart_add_log()` may be absent on
+  your FluentCart build; the plugin then falls back to the order's `addNote()` and finally to per-order
+  meta. The evidence is still recorded regardless of where the note lands. (Remember: this note is
+  written at *withdrawal processing*, not at *consent capture* — see the note under Test A.)

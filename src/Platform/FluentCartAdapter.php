@@ -339,7 +339,10 @@ final class FluentCartAdapter implements OrderDataSource {
 			try {
 				$context = array(
 					'module_name' => 'order',
-					'module_id'   => (int) $order_ref,
+					// FluentCart order refs are integer IDs; guard the cast so a
+					// non-numeric ref is passed through verbatim (visible in the log)
+					// instead of silently collapsing to 0.
+					'module_id'   => is_numeric( $order_ref ) ? (int) $order_ref : $order_ref,
 					'log_type'    => 'activity',
 				);
 				if ( class_exists( '\\FluentCart\\App\\Models\\Order' ) ) {
