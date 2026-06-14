@@ -1461,3 +1461,27 @@ msgstr "Widerruf bearbeitet"
 #: src/Frontend/EligibleOrders.php
 msgid "Withdrawal requested"
 msgstr "Widerruf beantragt"
+
+#: src/Domain/ConsentText.php
+msgid "I request immediate access to this digital content and I acknowledge that, once the download or streaming has begun, I lose my right of withdrawal."
+msgstr "Ich beantrage sofortigen Zugang zu diesem digitalen Inhalt und erkenne an, dass ich mit Beginn des Downloads oder des Streamings mein Widerrufsrecht verliere."
+
+#: src/Domain/ConsentText.php
+msgid "I request that this service begins immediately and I acknowledge that, once it has been fully performed, I lose my right of withdrawal."
+msgstr "Ich beantrage, dass diese Dienstleistung sofort beginnt, und erkenne an, dass ich mein Widerrufsrecht verliere, sobald sie vollständig erbracht wurde."
+
+#: src/Frontend/WooCheckoutConsent.php
+msgid "Applies to: %s"
+msgstr "Gilt für: %s"
+
+#: src/Frontend/WooCheckoutConsent.php
+msgid "Please confirm the required acknowledgement for: %s"
+msgstr "Bitte bestätigen Sie die erforderliche Kenntnisnahme für: %s"
+
+#: src/Frontend/WooCheckoutConsent.php
+msgid "Withdrawal-exemption consent captured at checkout for: %s"
+msgstr "Einwilligung zur Widerrufsrechtsausnahme beim Checkout erfasst für: %s"
+
+#: src/Admin/SettingsPage.php
+msgid "The right of withdrawal applies <strong>by default</strong> — including to digital products. Exempt a product or category only when a specific statutory exception actually applies. Enter product IDs and/or category IDs (comma-separated) under the matching reason. For the two <strong>conditional</strong> reasons the button is hidden only once the consumer's express consent + acknowledgement is captured: on the <strong>WooCommerce checkout</strong> this plugin now adds the required tick-box automatically and stores the agreed wording on the order as evidence. Until that tick-box is confirmed — and on platforms where checkout capture is not available yet — the button stays, which is the safe, compliant default. The acknowledgement wording is filterable via <code>wwu_wb_consent_text</code>. Seal-based reasons depend on the consumer unsealing after delivery, so they are never auto-hidden."
+msgstr "Das Widerrufsrecht gilt <strong>standardmäßig</strong> — auch für digitale Produkte. Nehmen Sie ein Produkt oder eine Kategorie nur dann aus, wenn tatsächlich eine gesetzliche Ausnahme greift. Geben Sie Produkt- und/oder Kategorie-IDs (kommagetrennt) unter dem entsprechenden Grund ein. Bei den beiden <strong>bedingten</strong> Gründen wird die Schaltfläche erst ausgeblendet, sobald die ausdrückliche Einwilligung und Kenntnisnahme des Verbrauchers erfasst wurde: Im <strong>WooCommerce-Checkout</strong> fügt dieses Plugin nun automatisch das erforderliche Kontrollkästchen hinzu und speichert den vereinbarten Wortlaut als Nachweis in der Bestellung. Bis dieses Kontrollkästchen bestätigt wurde — und auf Plattformen, auf denen die Checkout-Erfassung noch nicht verfügbar ist — bleibt die Schaltfläche sichtbar, was dem sicheren und konformen Standard entspricht. Der Wortlaut der Kenntnisnahme kann über den Filter <code>wwu_wb_consent_text</code> angepasst werden. Siegelbasierte Gründe hängen davon ab, dass der Verbraucher das Siegel nach der Lieferung öffnet, weshalb sie nie automatisch ausgeblendet werden."

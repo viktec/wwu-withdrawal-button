@@ -142,12 +142,21 @@ final class Plugin {
 
 			// Record reimbursements against a withdrawal in the evidence log.
 			( new \WWU\WithdrawalButton\Platform\WooRefundRecorder() )->register();
+
+			// Capture the consumer's consent + acknowledgement at checkout for the two
+			// conditional exemptions (digital immediate / service performed). Classic
+			// checkout only; the block Checkout needs a separate Store API integration.
+			( new \WWU\WithdrawalButton\Frontend\WooCheckoutConsent() )->register();
 		}
 
 		// FluentCart portal injection when FluentCart is active.
 		if ( null !== $services->platforms->get( 'fluentcart' ) ) {
 			( new \WWU\WithdrawalButton\Frontend\FluentCartPortal() )->register();
 		}
+
+		// Feed captured exemption consent (any platform's order meta) back to the
+		// evaluator so conditional exemptions hide the button only once consent exists.
+		( new \WWU\WithdrawalButton\Frontend\ConsentReader() )->register();
 
 		// Frontend assets (gated internally; the enqueue hook only fires on the front end).
 		( new Assets() )->register();

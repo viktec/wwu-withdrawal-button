@@ -1461,3 +1461,27 @@ msgstr ""
 #: src/Frontend/EligibleOrders.php
 msgid "Withdrawal requested"
 msgstr ""
+
+#: src/Domain/ConsentText.php
+msgid "I request immediate access to this digital content and I acknowledge that, once the download or streaming has begun, I lose my right of withdrawal."
+msgstr ""
+
+#: src/Domain/ConsentText.php
+msgid "I request that this service begins immediately and I acknowledge that, once it has been fully performed, I lose my right of withdrawal."
+msgstr ""
+
+#: src/Frontend/WooCheckoutConsent.php
+msgid "Applies to: %s"
+msgstr ""
+
+#: src/Frontend/WooCheckoutConsent.php
+msgid "Please confirm the required acknowledgement for: %s"
+msgstr ""
+
+#: src/Frontend/WooCheckoutConsent.php
+msgid "Withdrawal-exemption consent captured at checkout for: %s"
+msgstr ""
+
+#: src/Admin/SettingsPage.php
+msgid "The right of withdrawal applies <strong>by default</strong> — including to digital products. Exempt a product or category only when a specific statutory exception actually applies. Enter product IDs and/or category IDs (comma-separated) under the matching reason. For the two <strong>conditional</strong> reasons the button is hidden only once the consumer's express consent + acknowledgement is captured: on the <strong>WooCommerce checkout</strong> this plugin now adds the required tick-box automatically and stores the agreed wording on the order as evidence. Until that tick-box is confirmed — and on platforms where checkout capture is not available yet — the button stays, which is the safe, compliant default. The acknowledgement wording is filterable via <code>wwu_wb_consent_text</code>. Seal-based reasons depend on the consumer unsealing after delivery, so they are never auto-hidden."
+msgstr ""

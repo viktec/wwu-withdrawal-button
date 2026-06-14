@@ -1461,3 +1461,27 @@ msgstr "Rétractation traitée"
 #: src/Frontend/EligibleOrders.php
 msgid "Withdrawal requested"
 msgstr "Rétractation demandée"
+
+#: src/Domain/ConsentText.php
+msgid "I request immediate access to this digital content and I acknowledge that, once the download or streaming has begun, I lose my right of withdrawal."
+msgstr "Je demande l'accès immédiat à ce contenu numérique et je reconnais que, dès que le téléchargement ou la diffusion en continu a commencé, je perds mon droit de rétractation."
+
+#: src/Domain/ConsentText.php
+msgid "I request that this service begins immediately and I acknowledge that, once it has been fully performed, I lose my right of withdrawal."
+msgstr "Je demande que ce service commence immédiatement et je reconnais que, une fois qu'il a été pleinement exécuté, je perds mon droit de rétractation."
+
+#: src/Frontend/WooCheckoutConsent.php
+msgid "Applies to: %s"
+msgstr "S'applique à : %s"
+
+#: src/Frontend/WooCheckoutConsent.php
+msgid "Please confirm the required acknowledgement for: %s"
+msgstr "Veuillez confirmer la reconnaissance requise pour : %s"
+
+#: src/Frontend/WooCheckoutConsent.php
+msgid "Withdrawal-exemption consent captured at checkout for: %s"
+msgstr "Consentement d'exemption de rétractation recueilli lors du paiement pour : %s"
+
+#: src/Admin/SettingsPage.php
+msgid "The right of withdrawal applies <strong>by default</strong> — including to digital products. Exempt a product or category only when a specific statutory exception actually applies. Enter product IDs and/or category IDs (comma-separated) under the matching reason. For the two <strong>conditional</strong> reasons the button is hidden only once the consumer's express consent + acknowledgement is captured: on the <strong>WooCommerce checkout</strong> this plugin now adds the required tick-box automatically and stores the agreed wording on the order as evidence. Until that tick-box is confirmed — and on platforms where checkout capture is not available yet — the button stays, which is the safe, compliant default. The acknowledgement wording is filterable via <code>wwu_wb_consent_text</code>. Seal-based reasons depend on the consumer unsealing after delivery, so they are never auto-hidden."
+msgstr "Le droit de rétractation s'applique <strong>par défaut</strong> — y compris aux produits numériques. Exemptez un produit ou une catégorie uniquement lorsqu'une exception légale spécifique s'applique effectivement. Saisissez les identifiants de produit et/ou de catégorie (séparés par des virgules) sous le motif correspondant. Pour les deux motifs <strong>conditionnels</strong>, le bouton est masqué uniquement une fois que le consentement exprès et la reconnaissance du consommateur ont été recueillis : lors du <strong>paiement WooCommerce</strong>, cette extension ajoute désormais automatiquement la case à cocher requise et enregistre le libellé convenu sur la commande comme preuve. Tant que cette case n'est pas confirmée — et sur les plateformes où la capture au paiement n'est pas encore disponible — le bouton reste visible, ce qui constitue le comportement sécurisé et conforme par défaut. Le libellé de la reconnaissance est filtrable via <code>wwu_wb_consent_text</code>. Les motifs fondés sur le descellement dépendent de l'ouverture du scellé par le consommateur après la livraison et ne sont donc jamais masqués automatiquement."

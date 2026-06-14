@@ -47,6 +47,7 @@ final class SmokeTests {
 		'rfc3161'        => 'suite_rfc3161',
 		'fluentcart'     => 'suite_fluentcart',
 		'exemptions'     => 'suite_exemptions',
+		'consent'        => 'suite_consent',
 	);
 
 	/**
@@ -548,6 +549,89 @@ final class SmokeTests {
 		// Restore.
 		update_option( 'wwu_wb_exclusions', is_array( $saved ) ? $saved : array() );
 		\WWU\WithdrawalButton\Core\Settings::flush();
+
+		return $tests;
+	}
+
+	/**
+	 * Suite: checkout-consent capture (P2) — wording, cart reason lookup, entry build.
+	 *
+	 * Covers the pure, WooCommerce-independent pieces of the consent-capture layer:
+	 * the statutory wording resolver, the order-independent reason lookup used at
+	 * checkout, and the storable-entry builder. The evaluator round-trip (consent →
+	 * exempt) is already covered by suite_exemptions via the consent filter.
+	 *
+	 * @return array
+	 */
+	private function suite_consent(): array {
+		$tests = array();
+		$ct    = '\\WWU\\WithdrawalButton\\Domain\\ConsentText';
+		$res   = '\\WWU\\WithdrawalButton\\Domain\\ExemptionResolver';
+		$cc    = '\\WWU\\WithdrawalButton\\Frontend\\WooCheckoutConsent';
+
+		// Wording: conditional reasons get text; unconditional/seal-based get ''.
+		$digital = (string) $ct::for_reason( '59_o' );
+		$service = (string) $ct::for_reason( '59_a' );
+		$tests[] = $this->assert( 'consent.text_digital_present', '' !== $digital, 'Digital-immediate (59_o) has acknowledgement wording.' );
+		$tests[] = $this->assert( 'consent.text_service_present', '' !== $service, 'Service-performed (59_a) has acknowledgement wording.' );
+		$tests[] = $this->assert( 'consent.text_kinds_differ', $digital !== $service && '' !== $digital, 'Digital and service wordings differ.' );
+		$tests[] = $this->assert( 'consent.text_unconditional_empty', '' === (string) $ct::for_reason( '59_c' ), 'Unconditional reason (59_c) has no acknowledgement wording.' );
+
+		// Wording is filterable.
+		$flt = static function () {
+			return 'CUSTOM-ACK';
+		};
+		add_filter( 'wwu_wb_consent_text', $flt, 10, 3 );
+		$tests[] = $this->assert( 'consent.text_filterable', 'CUSTOM-ACK' === (string) $ct::for_reason( '59_o' ), 'wwu_wb_consent_text overrides the wording.' );
+		remove_filter( 'wwu_wb_consent_text', $flt, 10 );
+
+		// Order-independent reason lookup (checkout path).
+		$saved = get_option( 'wwu_wb_exclusions' );
+		update_option(
+			'wwu_wb_exclusions',
+			array(
+				'by_reason'           => array(
+					'59_o' => array(
+						'products'   => array( 7777 ),
+						'categories' => array(),
+					),
+					'59_c' => array(
+						'products'   => array(),
+						'categories' => array( 55 ),
+					),
+				),
+				'auto_detect_virtual' => false,
+			)
+		);
+		\WWU\WithdrawalButton\Core\Settings::flush();
+		\WWU\WithdrawalButton\Domain\ExceptionTypes::reset_cache();
+
+		$tests[] = $this->assert( 'consent.reason_for_product', '59_o' === (string) $res::reason_for( 7777, array() ), 'reason_for() resolves a tagged product to its reason.' );
+		$tests[] = $this->assert( 'consent.reason_for_category', '59_c' === (string) $res::reason_for( 0, array( 55 ) ), 'reason_for() resolves a tagged category to its reason.' );
+		$tests[] = $this->assert( 'consent.reason_for_none', null === $res::reason_for( 4321, array( 9 ) ), 'reason_for() returns null for an untagged product.' );
+
+		// Entry builder: only ticked + conditional reasons produce entries.
+		$map     = array(
+			'59_o' => array( 7777, 7778 ),
+			'59_c' => array( 9999 ), // unconditional → must be skipped even if "ticked".
+		);
+		$posted  = array(
+			'59_o' => true,
+			'59_c' => true,
+		);
+		$entries = $cc::build_consent_entries( $map, $posted, '203.0.113.7' );
+		$tests[] = $this->assert( 'consent.entries_count', 2 === count( $entries ), 'Two entries built (one per conditional product), unconditional skipped.' );
+		$first   = $entries[0] ?? array();
+		$tests[] = $this->assert( 'consent.entry_shape', '59_o' === ( $first['reason_id'] ?? '' ) && 7777 === (int) ( $first['product_id'] ?? 0 ) && '' !== ( $first['text_hash'] ?? '' ) && '203.0.113.7' === ( $first['ip'] ?? '' ), 'Entry carries reason, product, text hash and IP.' );
+
+		// Unticked reason → no entry.
+		$none = $cc::build_consent_entries( array( '59_o' => array( 7777 ) ), array( '59_o' => false ), '' );
+		$tests[] = $this->assert( 'consent.untiked_no_entry', empty( $none ), 'An un-ticked reason produces no consent entry.' );
+
+		// Restore.
+		update_option( 'wwu_wb_exclusions', is_array( $saved ) ? $saved : array() );
+		\WWU\WithdrawalButton\Core\Settings::flush();
+		\WWU\WithdrawalButton\Domain\ExceptionTypes::reset_cache();
 
 		return $tests;
 	}

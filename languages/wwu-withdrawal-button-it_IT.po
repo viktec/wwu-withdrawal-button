@@ -1461,3 +1461,27 @@ msgstr "Recesso gestito"
 #: src/Frontend/EligibleOrders.php
 msgid "Withdrawal requested"
 msgstr "Recesso richiesto"
+
+#: src/Domain/ConsentText.php
+msgid "I request immediate access to this digital content and I acknowledge that, once the download or streaming has begun, I lose my right of withdrawal."
+msgstr "Richiedo l'accesso immediato a questo contenuto digitale e riconosco che, una volta avviato il download o la riproduzione in streaming, perdo il mio diritto di recesso."
+
+#: src/Domain/ConsentText.php
+msgid "I request that this service begins immediately and I acknowledge that, once it has been fully performed, I lose my right of withdrawal."
+msgstr "Richiedo che il servizio venga avviato immediatamente e riconosco che, una volta eseguito integralmente, perdo il mio diritto di recesso."
+
+#: src/Frontend/WooCheckoutConsent.php
+msgid "Applies to: %s"
+msgstr "Si applica a: %s"
+
+#: src/Frontend/WooCheckoutConsent.php
+msgid "Please confirm the required acknowledgement for: %s"
+msgstr "Conferma il consenso richiesto per: %s"
+
+#: src/Frontend/WooCheckoutConsent.php
+msgid "Withdrawal-exemption consent captured at checkout for: %s"
+msgstr "Consenso all'esenzione dal recesso acquisito al checkout per: %s"
+
+#: src/Admin/SettingsPage.php
+msgid "The right of withdrawal applies <strong>by default</strong> — including to digital products. Exempt a product or category only when a specific statutory exception actually applies. Enter product IDs and/or category IDs (comma-separated) under the matching reason. For the two <strong>conditional</strong> reasons the button is hidden only once the consumer's express consent + acknowledgement is captured: on the <strong>WooCommerce checkout</strong> this plugin now adds the required tick-box automatically and stores the agreed wording on the order as evidence. Until that tick-box is confirmed — and on platforms where checkout capture is not available yet — the button stays, which is the safe, compliant default. The acknowledgement wording is filterable via <code>wwu_wb_consent_text</code>. Seal-based reasons depend on the consumer unsealing after delivery, so they are never auto-hidden."
+msgstr "Il diritto di recesso si applica <strong>per impostazione predefinita</strong> — anche ai prodotti digitali. Esonera un prodotto o una categoria solo quando si applica effettivamente una specifica eccezione prevista dalla legge. Inserisci gli ID prodotto e/o categoria (separati da virgola) sotto il motivo corrispondente. Per i due motivi <strong>condizionali</strong> il pulsante viene nascosto solo dopo che sono stati acquisiti il consenso espresso e la dichiarazione di rinuncia del consumatore: nel <strong>checkout WooCommerce</strong> questo plugin aggiunge ora automaticamente la casella di spunta richiesta e memorizza il testo concordato sull'ordine come prova. Fino a quando la casella non viene confermata — e sulle piattaforme in cui l'acquisizione al checkout non è ancora disponibile — il pulsante rimane visibile, che è il comportamento sicuro e conforme. Il testo della dichiarazione è filtrabile tramite <code>wwu_wb_consent_text</code>. I motivi basati sul sigillo dipendono dall'apertura del sigillo da parte del consumatore dopo la consegna, quindi non vengono mai nascosti automaticamente."

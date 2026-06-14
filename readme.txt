@@ -4,7 +4,7 @@ Tags: woocommerce, fluentcart, right of withdrawal, recesso, gdpr
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.0.0-alpha.27
+Stable tag: 1.0.0-alpha.28
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -63,6 +63,12 @@ The plugin records withdrawal declarations (name, identified contract, email, IP
 
 == Changelog ==
 
+= 1.0.0-alpha.28 =
+* Exemptions (Art. 59) — checkout consent capture. For the two conditional exemptions (digital content with immediate access; service fully performed), WooCommerce checkout now shows a required acknowledgement tick-box and stores the agreed wording (with a SHA-256 hash, timestamp and IP) on the order as evidence — so the button is hidden for those items only once the consumer has lawfully consented. Statutory wording is filterable via `wwu_wb_consent_text`. Classic WooCommerce checkout; the block Checkout and FluentCart capture are tracked follow-ups.
+
+= 1.0.0-alpha.27 =
+* Exemptions (Art. 59) — per-reason product/category tagging. Mark products or categories as exempt by a specific statutory reason (custom-made, perishable, sealed hygiene, dated services, digital immediate, service performed, …), each with its legal reference and plain-language guidance. The right of withdrawal stays the default — including digital products — and conditional reasons keep the button until consent is captured.
+
 = 1.0.0-alpha.19 =
 * FluentCart customer portal: the "Right of withdrawal" account page, the sidebar entry, the per-order button and the dashboard banner now work. Every FluentCart hook was corrected to the official FluentCart developer contract (verified against dev.fluentcart.com), and the order chooser reads each order's data through the correct customer/address relations. Fixes the blank page and missing button seen in live testing.
 
@@ -76,6 +82,9 @@ The plugin records withdrawal declarations (name, identified contract, email, IP
 * Foundation: bootstrap, schema (immutable log + timestamp tables), debug stack, REST diagnostics.
 
 == Upgrade Notice ==
+
+= 1.0.0-alpha.28 =
+Adds lawful consent capture at checkout for digital-immediate and service-performed exemptions. If you exempt those product types, the button is now hidden only after the consumer ticks the required acknowledgement. Test on staging; not yet a stable release.
 
 = 1.0.0-alpha.19 =
 Recommended for FluentCart stores: fixes the customer-account withdrawal page (was blank) and the per-order button. Test on staging before production; not yet a stable release.

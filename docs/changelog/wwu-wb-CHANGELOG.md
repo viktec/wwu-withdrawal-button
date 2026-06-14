@@ -5,6 +5,44 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Exemptions feature — P2: checkout consent capture (1.0.0-alpha.28, 2026-06-14)
+Second phase of the Art. 59 / Art. 16 exemptions feature
+([SPEC](../specs/wwu-wb-withdrawal-exemptions-SPEC.md)). The two **conditional**
+exemptions (digital immediate access 59_o, service fully performed 59_a) only remove
+the right of withdrawal when the consumer gave **prior express consent** AND
+**acknowledged losing the right**. This phase captures exactly that at the WooCommerce
+checkout, so those items are hidden from the button **only once the consent exists** —
+the missing half that made conditional reasons fail-safe (button always shown) until now.
+- **`WooCheckoutConsent`** (WooCommerce classic checkout) — detects conditional-exempt
+  items in the cart and renders one **required acknowledgement checkbox per reason**
+  (`woocommerce_review_order_before_submit`), blocks checkout server-side until each is
+  ticked (`woocommerce_checkout_process`), and stores the agreed wording **verbatim +
+  SHA-256 hash + timestamp + IP** on the order meta `_wwu_wb_consent`
+  (`woocommerce_checkout_create_order`). After the order exists it writes an order note +
+  an **append-only immutable-log event** (`exemption_consent`) as durable evidence.
+- **`ConsentText`** — statutory acknowledgement wording per consent kind (digital /
+  service), i18n in IT/EN/FR/ES/DE, fully overridable via the new **`wwu_wb_consent_text`**
+  filter. The exact text the consumer agreed to is stored on the order, so it is
+  reconstructable later even if the default changes.
+- **`ConsentReader`** — feeds the stored consent back to the evaluator through the
+  existing `wwu_wb_exemption_consent` filter, **platform-agnostically** (reads the order
+  meta via the adapter): WooCommerce works today; FluentCart will work as soon as its
+  checkout-capture hook lands (asked to the FluentCart team) — the read side needs no
+  further change.
+- **`ExemptionResolver::reason_for($product_id, $category_ids)`** — order-independent
+  reason lookup so the same per-reason map drives both the placed-order evaluator and the
+  cart at checkout.
+- **Settings copy updated** — the Exemptions section now states that the consent tick-box
+  is added automatically on the WooCommerce checkout and points at the `wwu_wb_consent_text`
+  filter.
+- **Smoke suite `consent`** — wording per kind + filterability, order-independent reason
+  lookup, and the storable-entry builder (only ticked + conditional reasons produce
+  entries). The evaluator round-trip stays covered by suite `exemptions`.
+- **Scope:** classic (PHP/shortcode) WooCommerce checkout. The block-based Checkout
+  (Store API) and FluentCart checkout capture are tracked follow-ups; until then those
+  paths keep the button (fail-safe). P3 (consumer-facing transparency copy + durable-medium
+  confirmation line in the email) is the next phase.
+
 ### Exemptions feature — P1: per-reason tagging + evaluator (1.0.0-alpha.27, 2026-06-14)
 First phase of the Art. 59 / Art. 16 product/service exemptions feature
 ([SPEC](../specs/wwu-wb-withdrawal-exemptions-SPEC.md)). The withdrawal right stays

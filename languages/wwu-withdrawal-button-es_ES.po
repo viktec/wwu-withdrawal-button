@@ -1461,3 +1461,27 @@ msgstr "Desistimiento gestionado"
 #: src/Frontend/EligibleOrders.php
 msgid "Withdrawal requested"
 msgstr "Desistimiento solicitado"
+
+#: src/Domain/ConsentText.php
+msgid "I request immediate access to this digital content and I acknowledge that, once the download or streaming has begun, I lose my right of withdrawal."
+msgstr "Solicito el acceso inmediato a este contenido digital y reconozco que, una vez iniciada la descarga o la transmisión en streaming, pierdo mi derecho de desistimiento."
+
+#: src/Domain/ConsentText.php
+msgid "I request that this service begins immediately and I acknowledge that, once it has been fully performed, I lose my right of withdrawal."
+msgstr "Solicito que este servicio comience de inmediato y reconozco que, una vez que haya sido completamente ejecutado, pierdo mi derecho de desistimiento."
+
+#: src/Frontend/WooCheckoutConsent.php
+msgid "Applies to: %s"
+msgstr "Aplica a: %s"
+
+#: src/Frontend/WooCheckoutConsent.php
+msgid "Please confirm the required acknowledgement for: %s"
+msgstr "Confirme el reconocimiento requerido para: %s"
+
+#: src/Frontend/WooCheckoutConsent.php
+msgid "Withdrawal-exemption consent captured at checkout for: %s"
+msgstr "Consentimiento de exención del derecho de desistimiento capturado en el pago para: %s"
+
+#: src/Admin/SettingsPage.php
+msgid "The right of withdrawal applies <strong>by default</strong> — including to digital products. Exempt a product or category only when a specific statutory exception actually applies. Enter product IDs and/or category IDs (comma-separated) under the matching reason. For the two <strong>conditional</strong> reasons the button is hidden only once the consumer's express consent + acknowledgement is captured: on the <strong>WooCommerce checkout</strong> this plugin now adds the required tick-box automatically and stores the agreed wording on the order as evidence. Until that tick-box is confirmed — and on platforms where checkout capture is not available yet — the button stays, which is the safe, compliant default. The acknowledgement wording is filterable via <code>wwu_wb_consent_text</code>. Seal-based reasons depend on the consumer unsealing after delivery, so they are never auto-hidden."
+msgstr "El derecho de desistimiento se aplica <strong>de forma predeterminada</strong> — incluidos los productos digitales. Exima un producto o una categoría únicamente cuando se aplique efectivamente una excepción legal específica. Introduzca los ID de producto y/o categoría (separados por comas) bajo el motivo correspondiente. Para los dos motivos <strong>condicionales</strong>, el botón se oculta solo una vez que se ha obtenido el consentimiento expreso y el reconocimiento del consumidor: en el <strong>proceso de pago de WooCommerce</strong>, este plugin añade ahora automáticamente la casilla de verificación requerida y almacena el texto acordado en el pedido como evidencia. Hasta que dicha casilla sea confirmada — y en las plataformas donde la captura en el pago aún no esté disponible — el botón permanece visible, que es el comportamiento seguro y conforme por defecto. El texto del reconocimiento es filtrable mediante <code>wwu_wb_consent_text</code>. Los motivos basados en el precintado dependen de que el consumidor abra el precinto tras la entrega, por lo que nunca se ocultan automáticamente."
