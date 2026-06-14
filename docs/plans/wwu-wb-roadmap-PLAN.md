@@ -30,7 +30,7 @@
 | **F8** | Admin polish + Requests Dashboard + Compliance Status | Settings, Dashboard (filters/export/chain badge), Compliance Status (go-live countdown, doc checklist, warnings), Standard #12 tooltips/help/onboarding | **A8** (UX completeness gate #14) |
 | **F9** | Release engineering | README/CONTRIBUTING/CODE_OF_CONDUCT/SECURITY/issue+PR templates, GitHub Actions (php-lint, phpcs, smoke), build script (Dompdf vendor → ZIP), `readme.txt`, GitHub Release `v1.0.0`, GitHub repo public | cumulative ship-readiness audit |
 | **P-video** | HyperFrames explanatory video (QUEUED) | `_internal/video/` script + HyperFrames composition + render — **triggered when F0–F9 done** | — |
-| **P1+** | Post-MVP | RFC 3161/eIDAS (Aruba/Namirial), full `.ots` PHP verifier, partial/line-item withdrawal, FluentCRM hook, wordpress.org submission, EEA labels, refund-draft workflow, **public REST API for automations** (see below) | — |
+| **P1+** | Post-MVP | RFC 3161/eIDAS (Aruba/Namirial), full `.ots` PHP verifier, partial/line-item withdrawal, FluentCRM hook, wordpress.org submission, EEA labels, refund-draft workflow, **Art. 59 exemptions feature incl. digital/service consent-capture** ([SPEC ready](../specs/wwu-wb-withdrawal-exemptions-SPEC.md)), **public REST API for automations** (see below) | — |
 
 ---
 
