@@ -129,7 +129,7 @@ final class RequestsDashboard {
 			echo '<td><a href="' . esc_url( VerifiableLink::verify_url( $uid ) ) . '" target="_blank" rel="noopener">' . esc_html__( 'Verify', 'wwu-withdrawal-button' ) . '</a></td>';
 
 			// Row actions.
-			echo '<td>' . $this->row_actions( $uid, $order_ref, '' !== $processed_at ) . '</td>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built with escaped parts.
+			echo '<td>' . $this->row_actions( $uid, $platform, $order_ref, '' !== $processed_at ) . '</td>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built with escaped parts.
 			echo '</tr>';
 		}
 
@@ -219,11 +219,12 @@ final class RequestsDashboard {
 	 * Build the action links for a request row.
 	 *
 	 * @param string $uid       Request UUID.
+	 * @param string $platform  Platform key ('woocommerce'|'fluentcart').
 	 * @param string $order_ref Order reference.
 	 * @param bool   $processed Whether it is already processed.
 	 * @return string
 	 */
-	private function row_actions( string $uid, string $order_ref, bool $processed ): string {
+	private function row_actions( string $uid, string $platform, string $order_ref, bool $processed ): string {
 		$base = admin_url( 'admin-post.php' );
 		$out  = array();
 
@@ -235,29 +236,47 @@ final class RequestsDashboard {
 		$resend = wp_nonce_url( add_query_arg( array( 'action' => 'wwu_wb_resend', 'uid' => $uid ), $base ), self::ACTION_NONCE );
 		$out[]  = '<a href="' . esc_url( $resend ) . '">' . esc_html__( 'Resend email', 'wwu-withdrawal-button' ) . '</a>';
 
-		$refund = $this->refund_url( $order_ref );
-		if ( '' !== $refund ) {
-			$out[] = '<a href="' . esc_url( $refund ) . '" target="_blank" rel="noopener">' . esc_html__( 'Refund order', 'wwu-withdrawal-button' ) . '</a>';
+		$order_url = $this->order_admin_url( $platform, $order_ref );
+		if ( '' !== $order_url ) {
+			$out[] = '<a href="' . esc_url( $order_url ) . '" target="_blank" rel="noopener">' . esc_html__( 'Open order (refund)', 'wwu-withdrawal-button' ) . '</a>';
 		}
 
 		return implode( ' &nbsp;|&nbsp; ', $out );
 	}
 
 	/**
-	 * WooCommerce order edit URL (where the merchant issues the refund), or ''.
+	 * Admin URL where the merchant opens the order to issue the refund.
 	 *
+	 * WooCommerce: the order edit screen (verified API). FluentCart: a best-effort
+	 * deep-link into the FluentCart admin SPA — the exact order route is not in the
+	 * official docs (June 2026), so it is filterable via `wwu_wb_order_admin_url`
+	 * for correction. Returns '' when no URL can be built.
+	 *
+	 * @param string $platform  Platform key.
 	 * @param string $order_ref Order reference.
 	 * @return string
 	 */
-	private function refund_url( string $order_ref ): string {
-		if ( ! function_exists( 'wc_get_order' ) ) {
-			return '';
+	private function order_admin_url( string $platform, string $order_ref ): string {
+		$url = '';
+
+		if ( 'woocommerce' === $platform && function_exists( 'wc_get_order' ) ) {
+			$order = wc_get_order( $order_ref );
+			if ( $order instanceof \WC_Order && method_exists( $order, 'get_edit_order_url' ) ) {
+				$url = (string) $order->get_edit_order_url();
+			}
+		} elseif ( 'fluentcart' === $platform ) {
+			// Best-effort SPA deep-link; override with the exact route via the filter.
+			$url = admin_url( 'admin.php?page=fluent-cart#/orders/' . rawurlencode( $order_ref ) );
 		}
-		$order = wc_get_order( $order_ref );
-		if ( ! $order instanceof \WC_Order ) {
-			return '';
-		}
-		return method_exists( $order, 'get_edit_order_url' ) ? (string) $order->get_edit_order_url() : '';
+
+		/**
+		 * Filter the "open order" admin URL (e.g. to correct the FluentCart route).
+		 *
+		 * @param string $url       The admin URL ('' if none).
+		 * @param string $platform  Platform key.
+		 * @param string $order_ref Order reference.
+		 */
+		return (string) apply_filters( 'wwu_wb_order_admin_url', $url, $platform, $order_ref );
 	}
 
 	/**

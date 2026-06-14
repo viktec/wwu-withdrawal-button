@@ -1346,16 +1346,16 @@ msgid "Request: %s"
 msgstr "Antrag: %s"
 
 #: templates/partials/consumer-guidance.php:25
-msgid "You can withdraw from this contract within 14 days, without giving any reason. It takes two short steps and we will email you a confirmation straight away."
-msgstr "Sie können von diesem Vertrag innerhalb von 14 Tagen ohne Angabe von Gründen widerrufen. Es sind zwei kurze Schritte nötig, und wir senden Ihnen sofort eine Bestätigung per E-Mail."
+msgid "You can withdraw from this contract within %d days, without giving any reason. It takes two short steps and we will email you a confirmation straight away."
+msgstr "Sie können von diesem Vertrag innerhalb von %d Tagen ohne Angabe von Gründen widerrufen. Es sind zwei kurze Schritte nötig, und wir senden Ihnen sofort eine Bestätigung per E-Mail."
 
 #: templates/partials/consumer-guidance.php:30
 msgid "How it works & what happens next"
 msgstr "Wie es funktioniert und was als Nächstes passiert"
 
 #: templates/partials/consumer-guidance.php:32
-msgid "You have 14 days to withdraw — counted from when you (or someone you nominated) received the goods, or from the day the contract was concluded for a service."
-msgstr "Sie haben 14 Tage Zeit, den Widerruf zu erklären — gerechnet ab dem Tag, an dem Sie (oder eine von Ihnen benannte Person) die Waren erhalten haben, bzw. ab dem Tag des Vertragsabschlusses bei einer Dienstleistung."
+msgid "You have %d days to withdraw — counted from when you (or someone you nominated) received the goods, or from the day the contract was concluded for a service."
+msgstr "Sie haben %d Tage Zeit, den Widerruf zu erklären — gerechnet ab dem Tag, an dem Sie (oder eine von Ihnen benannte Person) die Waren erhalten haben, bzw. ab dem Tag des Vertragsabschlusses bei einer Dienstleistung."
 
 #: templates/partials/consumer-guidance.php:33
 msgid "You do not need to explain why. There are no hidden steps and no obligation to call us."

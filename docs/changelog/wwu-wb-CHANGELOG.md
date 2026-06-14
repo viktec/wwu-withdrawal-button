@@ -5,6 +5,25 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Live-test fixes: re-request guard, dashboard order link, guidance i18n (1.0.0-alpha.25, 2026-06-14)
+Three issues found in live FluentCart testing:
+- **Button no longer offered on an order already withdrawn/processed.** The per-order
+  FluentCart surface (`FluentCartPortal::inject`) showed the button again even after a
+  request existed. It now checks the request status (like WooCommerce's order-detail
+  already did) and shows a **localized** status notice instead. Extracted
+  `EligibleOrders::request_status_label()` as the single source so both surfaces show a
+  clean translated label ("Withdrawal requested" / "Withdrawal handled"), never the raw
+  internal status — also fixing WooMyAccount's old raw-status notice.
+- **Requests Dashboard: "Open order (refund)" link for both platforms.** The refund link
+  was WooCommerce-only. `order_admin_url($platform, $order_ref)` now returns the WC order
+  edit screen for WooCommerce and a best-effort FluentCart admin deep-link (filterable via
+  `wwu_wb_order_admin_url`, since FluentCart's exact admin order route isn't documented).
+- **Mixed IT/EN in the consumer-guidance box → fixed.** When the withdrawal window became
+  configurable (alpha.20), the intro + first bullet gained a `%d` placeholder, but the
+  it/de/fr/es .po still had the old "14"-hardcoded msgids, so those two strings fell back
+  to English. Updated the two msgids/msgstrs to `%d` in all four .po + the .pot and
+  recompiled the .mo (refund "within 14 days" strings deliberately left literal).
+
 ### Digital auto-exclusion now defaults OFF — the right is the default (1.0.0-alpha.24, 2026-06-14)
 The admin diagnostic confirmed why a FluentCart digital test order was hidden:
 `status="completed" … reason=no_withdrawal_right`. Not a bug — the Art. 59 *digital

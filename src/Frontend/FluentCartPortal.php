@@ -205,6 +205,15 @@ final class FluentCartPortal {
 			return $sections;
 		}
 
+		// If a withdrawal request already exists for this order, show its (localized)
+		// status instead of the button — never offer to withdraw a second time.
+		$status_label = EligibleOrders::request_status_label( $adapter, $order->order_ref );
+		if ( '' !== $status_label ) {
+			$notice = '<p class="wwu-wb-status-notice">' . esc_html( $status_label ) . '</p>';
+			$sections['after_summary'] = ( $sections['after_summary'] ?? '' ) . $notice;
+			return $sections;
+		}
+
 		if ( ! Settings::enabled() || ! Services::instance()->applicability->decide( $order )->show ) {
 			return $sections;
 		}

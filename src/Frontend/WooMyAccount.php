@@ -160,16 +160,11 @@ final class WooMyAccount {
 			return;
 		}
 
-		// If a request already exists, show a status notice instead of the button.
-		$status = (string) $adapter->get_meta( $order->order_ref, 'status' );
-		if ( '' !== $status ) {
-			echo '<p class="wwu-wb-status-notice">' . esc_html(
-				sprintf(
-					/* translators: %s: status. */
-					__( 'Withdrawal request status: %s', 'wwu-withdrawal-button' ),
-					$status
-				)
-			) . '</p>';
+		// If a request already exists, show a localized status notice instead of the
+		// button (shared label — never the raw internal status).
+		$status_label = EligibleOrders::request_status_label( $adapter, $order->order_ref );
+		if ( '' !== $status_label ) {
+			echo '<p class="wwu-wb-status-notice">' . esc_html( $status_label ) . '</p>';
 			return;
 		}
 

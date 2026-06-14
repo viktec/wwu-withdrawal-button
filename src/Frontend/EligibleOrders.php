@@ -20,6 +20,7 @@ namespace WWU\WithdrawalButton\Frontend;
 
 use WWU\WithdrawalButton\Core\Services;
 use WWU\WithdrawalButton\Core\Settings;
+use WWU\WithdrawalButton\Platform\OrderDataSource;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
@@ -36,6 +37,30 @@ final class EligibleOrders {
 	 * @var int
 	 */
 	private const SCAN_LIMIT = 20;
+
+	/**
+	 * Localized status label for an order that already has a withdrawal request.
+	 *
+	 * Single source of truth for the per-order surfaces (account order detail,
+	 * FluentCart portal) so a request never shows the raw internal status (e.g.
+	 * "pending") and the button is replaced by a clean, translated notice. Returns
+	 * '' when no request exists yet (caller then shows the button).
+	 *
+	 * @param OrderDataSource $adapter   Platform adapter.
+	 * @param string          $order_ref Order reference.
+	 * @return string Translated label, or '' if there is no request.
+	 */
+	public static function request_status_label( OrderDataSource $adapter, string $order_ref ): string {
+		$processed = (string) $adapter->get_meta( $order_ref, 'processed_at' );
+		if ( '' !== $processed ) {
+			return __( 'Withdrawal handled', 'wwu-withdrawal-button' );
+		}
+		$status = (string) $adapter->get_meta( $order_ref, 'status' );
+		if ( '' !== $status ) {
+			return __( 'Withdrawal requested', 'wwu-withdrawal-button' );
+		}
+		return '';
+	}
 
 	/**
 	 * Render the customer's withdrawal-relevant orders (or guidance when none).
