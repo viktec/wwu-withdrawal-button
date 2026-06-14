@@ -94,13 +94,27 @@ final class EligibleOrders {
 				continue;
 			}
 
-			$status   = (string) $adapter->get_meta( $order->order_ref, 'status' );
-			$eligible = $enabled && $services->applicability->decide( $order )->show;
+			$status    = (string) $adapter->get_meta( $order->order_ref, 'status' );
+			$processed = (string) $adapter->get_meta( $order->order_ref, 'processed_at' );
+			$refunded  = (float) $wc_order->get_total_refunded();
+			$eligible  = $enabled && $services->applicability->decide( $order )->show;
 
 			// Only surface orders the customer can act on or has already acted on;
 			// hide orders that are simply out of scope to avoid noise.
 			if ( '' === $status && ! $eligible ) {
 				continue;
+			}
+
+			// Consumer-facing, localized status — never the raw internal 'pending'
+			// value, and reflecting the merchant's progress (refund / handled).
+			if ( $refunded > 0 ) {
+				$status_label = __( 'Refunded', 'wwu-withdrawal-button' );
+			} elseif ( '' !== $processed ) {
+				$status_label = __( 'Withdrawal handled', 'wwu-withdrawal-button' );
+			} elseif ( '' !== $status ) {
+				$status_label = __( 'Withdrawal requested', 'wwu-withdrawal-button' );
+			} else {
+				$status_label = '';
 			}
 
 			$created = $wc_order->get_date_created();
@@ -109,7 +123,7 @@ final class EligibleOrders {
 			$rows[] = array(
 				'number'   => (string) $order->number,
 				'date'     => $created ? wc_format_datetime( $created ) : '',
-				'status'   => $status,
+				'status'   => $status_label,
 				'eligible' => $eligible,
 				'url'      => self::form_url( $order->order_ref ),
 				'label'    => $services->labels->withdraw_label( $order->country, $locale ),

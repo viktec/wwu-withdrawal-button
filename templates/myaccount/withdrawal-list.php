@@ -81,7 +81,7 @@ $orders_url = isset( $orders_url ) ? (string) $orders_url : '';
 						<td class="wwu-wb-orders__date"><?php echo esc_html( (string) $row['date'] ); ?></td>
 						<td class="wwu-wb-orders__action">
 							<?php if ( '' !== (string) $row['status'] ) : ?>
-								<span class="wwu-wb-status-pill"><?php echo esc_html( sprintf( /* translators: %s: status. */ __( 'Request: %s', 'wwu-withdrawal-button' ), (string) $row['status'] ) ); ?></span>
+								<span class="wwu-wb-status-pill"><?php echo esc_html( (string) $row['status'] ); ?></span>
 							<?php else : ?>
 								<a class="wwu-wb-button wwu-wb-button--sm" href="<?php echo esc_url( (string) $row['url'] ); ?>"><?php echo esc_html( (string) $row['label'] ); ?></a>
 							<?php endif; ?>
