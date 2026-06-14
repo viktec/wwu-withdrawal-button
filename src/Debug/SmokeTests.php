@@ -628,6 +628,17 @@ final class SmokeTests {
 		$none = $cc::build_consent_entries( array( '59_o' => array( 7777 ) ), array( '59_o' => false ), '' );
 		$tests[] = $this->assert( 'consent.untiked_no_entry', empty( $none ), 'An un-ticked reason produces no consent entry.' );
 
+		// ClauseLibrary: the exemption-consent privacy clause exists in IT + EN.
+		$cl      = '\\WWU\\WithdrawalButton\\Legal\\ClauseLibrary';
+		$tests[] = $this->assert( 'consent.clause_registered', in_array( 'consent_privacy', $cl::types(), true ), 'consent_privacy clause type is registered.' );
+		$tests[] = $this->assert( 'consent.clause_it', '' !== trim( (string) $cl::get( 'consent_privacy', 'it' ) ), 'IT exemption-consent privacy clause is present.' );
+		$tests[] = $this->assert( 'consent.clause_en', '' !== trim( (string) $cl::get( 'consent_privacy', 'en' ) ), 'EN exemption-consent privacy clause is present.' );
+
+		// ExemptionConfirmation: no-op guards (no email / no entries → no send, no side effects).
+		$ec      = '\\WWU\\WithdrawalButton\\Mail\\ExemptionConfirmation';
+		$tests[] = $this->assert( 'consent.confirmation_guard_no_email', false === $ec::send_for_order( 'woocommerce', '1', '', '#1', array( array( 'reason_id' => '59_o' ) ) ), 'Confirmation is not sent without a valid e-mail.' );
+		$tests[] = $this->assert( 'consent.confirmation_guard_no_entries', false === $ec::send_for_order( 'woocommerce', '1', 'buyer@example.com', '#1', array() ), 'Confirmation is not sent without entries.' );
+
 		// Restore.
 		update_option( 'wwu_wb_exclusions', is_array( $saved ) ? $saved : array() );
 		\WWU\WithdrawalButton\Core\Settings::flush();

@@ -499,7 +499,11 @@ final class SettingsPage {
 		$legacy_c = array_map( 'intval', (array) ( $exclusions['excluded_category_ids'] ?? array() ) );
 
 		echo '<h2>' . esc_html__( 'Exemptions (Art. 59)', 'wwu-withdrawal-button' ) . '</h2>';
-		echo '<p class="description" style="max-width:860px;">' . wp_kses_post( __( 'The right of withdrawal applies <strong>by default</strong> — including to digital products. Exempt a product or category only when a specific statutory exception actually applies. Enter product IDs and/or category IDs (comma-separated) under the matching reason. For the two <strong>conditional</strong> reasons the button is hidden only once the consumer\'s express consent + acknowledgement is captured: on the <strong>WooCommerce checkout</strong> this plugin now adds the required tick-box automatically and stores the agreed wording on the order as evidence. Until that tick-box is confirmed — and on platforms where checkout capture is not available yet — the button stays, which is the safe, compliant default. The acknowledgement wording is filterable via <code>wwu_wb_consent_text</code>. Seal-based reasons depend on the consumer unsealing after delivery, so they are never auto-hidden.', 'wwu-withdrawal-button' ) ) . '</p>';
+		echo '<p class="description" style="max-width:860px;">' . wp_kses_post( __( 'The right of withdrawal applies <strong>by default to every product</strong>, including digital goods and services. <strong>Physical products never need consent</strong> — the 14-day right just applies and no checkbox is ever shown for them. Only the <strong>two conditional exemptions</strong> (digital content with immediate access; a service fully performed) remove the right, and only when the consumer gives <strong>prior express consent</strong> AND <strong>acknowledges losing the right</strong>. Tag a product or category under a specific reason below by entering product IDs and/or category IDs (comma-separated).', 'wwu-withdrawal-button' ) ) . '</p>';
+
+		echo '<p class="description" style="max-width:860px;">' . wp_kses_post( __( 'For the two conditional reasons the plugin <strong>captures the consent first, then hides the button</strong>: on the <strong>WooCommerce checkout</strong> it adds the required tick-box automatically and stores the agreed wording on the order. Until that tick-box is confirmed — and on platforms/checkouts where capture is not available yet — the button <strong>stays visible, even on digital items</strong> (fail-safe toward the consumer\'s right). The plugin never hides the button "on digital" blindly. The acknowledgement wording is filterable via <code>wwu_wb_consent_text</code>. Seal-based reasons depend on the consumer unsealing after delivery, so they are never auto-hidden.', 'wwu-withdrawal-button' ) ) . '</p>';
+
+		echo '<p class="description" style="max-width:860px;">' . wp_kses_post( __( 'The stored consent is <strong>evidence to discharge your burden of proof</strong> (Art. 6(9) Dir. 2011/83/EU; GDPR accountability Art. 5(2)) — not a legally-named "register". For the <strong>digital</strong> exemption the law also requires you to send the consumer a confirmation on a <strong>durable medium</strong> (e-mail) before access begins, or the exemption does not hold. See the plugin\'s legal note for the full basis.', 'wwu-withdrawal-button' ) ) . '</p>';
 
 		echo '<table class="form-table" role="presentation"><tbody>';
 
@@ -523,6 +527,9 @@ final class SettingsPage {
 			echo '<label style="margin-right:14px;">' . esc_html__( 'Product IDs', 'wwu-withdrawal-button' ) . ' <input type="text" class="regular-text" name="exempt[' . esc_attr( (string) $id ) . '][products]" value="' . esc_attr( $p ) . '" placeholder="' . esc_attr__( 'e.g. 12, 84', 'wwu-withdrawal-button' ) . '"></label>';
 			echo '<label>' . esc_html__( 'Category IDs', 'wwu-withdrawal-button' ) . ' <input type="text" class="regular-text" name="exempt[' . esc_attr( (string) $id ) . '][categories]" value="' . esc_attr( $c ) . '" placeholder="' . esc_attr__( 'e.g. 5', 'wwu-withdrawal-button' ) . '"></label>';
 			echo '<p class="description">' . esc_html( (string) $def['hint'] ) . '</p>';
+			if ( ! empty( $def['conditional'] ) ) {
+				echo '<p class="description" style="color:#1d6b2f;"><strong>' . esc_html__( 'How the plugin enforces this:', 'wwu-withdrawal-button' ) . '</strong> ' . esc_html__( 'on the WooCommerce checkout a required acknowledgement tick-box is added automatically for this reason. The button stays visible until the consumer ticks it; only then is it hidden for this item. On other checkouts/platforms the button stays (fail-safe). For the digital reason you must also deliver a durable-medium (e-mail) confirmation to the consumer before access begins.', 'wwu-withdrawal-button' ) . '</p>';
+			}
 			echo '</td></tr>';
 		}
 
@@ -539,6 +546,15 @@ final class SettingsPage {
 		// Legacy crude auto-detect toggle.
 		echo '<tr><th scope="row">' . esc_html__( 'Auto-exclude delivered digital (legacy)', 'wwu-withdrawal-button' ) . '</th><td>';
 		echo '<label><input type="checkbox" name="exempt_auto_detect" value="1" ' . checked( $auto, true, false ) . '> ' . esc_html__( 'Treat virtual/downloadable items on completed orders as exempt. OFF by default — the proper path is the "Digital content with immediate access" reason with consent capture.', 'wwu-withdrawal-button' ) . '</label>';
+		echo '</td></tr>';
+
+		// Consent IP capture (GDPR strict-necessity → configurable, default on). Lives
+		// in wwu_wb_settings; saved by the main settings handler, shown here for context.
+		$main_opt   = (array) get_option( 'wwu_wb_settings', array() );
+		$capture_ip = array_key_exists( 'consent_capture_ip', $main_opt ) ? ! empty( $main_opt['consent_capture_ip'] ) : true;
+		echo '<tr><th scope="row">' . esc_html__( 'Store consumer IP with the consent', 'wwu-withdrawal-button' ) . '</th><td>';
+		echo '<label><input type="checkbox" name="consent_capture_ip" value="1" ' . checked( $capture_ip, true, false ) . '> ' . esc_html__( 'Record the IP address alongside each captured consent as corroborating evidence. Stored only on the order (anonymised automatically after the retention period), never in the immutable log. Turn off to minimise personal data — the agreed wording, its hash and the timestamp remain.', 'wwu-withdrawal-button' ) . '</label>';
+		echo '<p class="description">' . esc_html__( 'Retention is the "Keep records for N years" value above (default 10, aligned with the ordinary limitation period). After it lapses, the IP on stored consents is anonymised by a daily routine.', 'wwu-withdrawal-button' ) . '</p>';
 		echo '</td></tr>';
 
 		echo '</tbody></table>';
@@ -563,6 +579,8 @@ final class SettingsPage {
 		$settings['send_pdf']        = Sanitizer::bool( $_POST['send_pdf'] ?? '' );
 		$settings['merchant_email']  = sanitize_email( (string) ( $_POST['merchant_email'] ?? '' ) );
 		$settings['retention_years'] = max( 1, min( 30, (int) ( $_POST['retention_years'] ?? 10 ) ) );
+		// IP capture for the exemption-consent evidence (GDPR strict-necessity → configurable).
+		$settings['consent_capture_ip'] = Sanitizer::bool( $_POST['consent_capture_ip'] ?? '' );
 		// Consumer guidance: window is clamped to the 14-day legal minimum; custom
 		// text replaces the default block (basic HTML allowed, merchant-owned).
 		$settings['withdrawal_window_days'] = max( 14, min( 365, (int) ( $_POST['withdrawal_window_days'] ?? 14 ) ) );

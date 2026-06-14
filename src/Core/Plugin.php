@@ -158,6 +158,9 @@ final class Plugin {
 		// evaluator so conditional exemptions hide the button only once consent exists.
 		( new \WWU\WithdrawalButton\Frontend\ConsentReader() )->register();
 
+		// Daily retention purge: anonymise the IP on stored consents past the horizon.
+		( new ConsentRetention() )->register();
+
 		// Frontend assets (gated internally; the enqueue hook only fires on the front end).
 		( new Assets() )->register();
 

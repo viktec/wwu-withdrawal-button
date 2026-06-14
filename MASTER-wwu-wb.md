@@ -3,12 +3,12 @@
 > Single index for the **WWU Withdrawal Button** plugin: the EU online right-of-withdrawal function ("withdrawal button", Art. 11a / Art. 54-bis) for WooCommerce & FluentCart. One line per doc; never put content here.
 
 - **Slug:** `wwu-wb` · **Folder:** `wwu-withdrawal-button`
-- **Status:** **MVP feature-complete** (F0–F8 + audit hardening), merged to `main`, **released** [`v1.0.0-alpha.27`](https://github.com/An-Idea-For-Business/wwu-withdrawal-button/releases/tag/v1.0.0-alpha.27) — in live testing. Current build `1.0.0-alpha.28` (exemptions P2: checkout consent capture).
+- **Status:** **MVP feature-complete** (F0–F8 + audit hardening), merged to `main`, **released** [`v1.0.0-alpha.27`](https://github.com/An-Idea-For-Business/wwu-withdrawal-button/releases/tag/v1.0.0-alpha.27) — in live testing. Current build `1.0.0-alpha.29` (exemptions P3: durable-medium confirmation + retention/purge + GDPR clause + Consent records view).
 - **Target version:** `1.0.0` · **License:** GPL-3.0-or-later
 - **Credits:** mredodos · Matteo Alfieri (An Idea for Business) · WebWakeUp ([webwakeup.it](https://webwakeup.it))
 - **Product page (live):** [webwakeup.it/wwu-withdrawal-button](https://webwakeup.it/wwu-withdrawal-button/)
 - **Legal go-live:** **2026-06-19** (contracts concluded on/after)
-- **Last updated:** 2026-06-14 (exemptions P2 — WooCommerce checkout consent capture)
+- **Last updated:** 2026-06-14 (exemptions P3 — durable-medium confirmation, retention/purge, GDPR clause, Consent records view + legal note)
 
 ## What it is (one paragraph)
 A free, open-source WordPress plugin that makes a store compliant with Directive (EU) 2023/2673 (new Art. 11a of the Consumer Rights Directive 2011/83/EU; Italy: Art. 54-bis Codice del Consumo via D.Lgs. 209/2025): a prominently displayed, continuously available, statutory-labelled withdrawal button → two-step statement + confirmation → durable-medium acknowledgement (email + PDF + verifiable link) → tamper-evident immutable log anchored to OpenTimestamps. Dual platform (WooCommerce HPOS+legacy / FluentCart), multilingual (IT/EN/FR/ES/DE + extensible), Complianz/TranslatePress-compatible, shortcodes + blocks, plus generators for the Annex I-B model form and Privacy/Terms/pre-contractual clauses.
@@ -24,6 +24,7 @@ Namespace `WWU\WithdrawalButton` · constants `WWU_WB_*` · options `wwu_wb_*` �
 ## Legal reference
 - [Legal reference (verbatim)](docs/legal/wwu-wb-legal-reference.md) — Art. 11a EN+IT, Recital 37, Art. 54-bis, Annex I-B, per-country labels (DE §356a / FR D.221-5 / ES / CH), Rome I applicability, GDPR.
 - [Compliance matrix](docs/legal/wwu-wb-compliance-matrix.md) — clause → feature → test, with the Standard #14 acceptance gate.
+- [Exemption-consent evidence & record-keeping](docs/legal/wwu-wb-exemption-consent-evidence-NOTE.md) — official-source + adversarially-verified note (2026-06-14): no named "register" (burden of proof Art. 6(9) CRD + GDPR accountability Art. 5(2)); durable-medium confirmation **constitutive** for the digital exemption (Art. 59(1)(o) CdC / Art. 16(1)(m)+14(4)(b)(iii) CRD); 10-year defensible retention (art. 2946 c.c.) configurable + purge routine; GDPR lawful basis = legitimate interest (Art. 6(1)(f)), not consent. Drives exemptions P3 + the privacy clause.
 
 ## Plans
 - [Implementation roadmap (PLAN)](docs/plans/wwu-wb-roadmap-PLAN.md) — phases F0–F9 + audits + queued HyperFrames video + post-MVP.

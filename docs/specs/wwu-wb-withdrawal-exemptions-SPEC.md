@@ -5,9 +5,11 @@ products with immediate access, or services already performed?"* The answer is *
 only under strict legal conditions** — so the right design is not "hide the button" but
 **capture the legal prerequisites and exempt only when they are met**.
 
-> **Status: P1 + P2 shipped** (1.0.0-alpha.27 / 1.0.0-alpha.28). Per-reason tagging,
-> evaluator, and WooCommerce checkout consent capture are live; FluentCart checkout
-> capture + P3 (consumer transparency + durable-medium email line) remain — see §12.4.
+> **Status: P1 + P2 + P3 shipped** (1.0.0-alpha.27 → alpha.29). Per-reason tagging,
+> evaluator, WooCommerce checkout consent capture, the durable-medium confirmation e-mail,
+> retention/purge, the GDPR clause and a Consent-records view are live. FluentCart + the
+> WooCommerce **block** Checkout consent capture remain — see §12. The legal basis is
+> documented in [the evidence note](../legal/wwu-wb-exemption-consent-evidence-NOTE.md).
 
 > Legal references verified by research (EUR-Lex, Codice del Consumo, CJEU). Not legal
 > advice — the merchant remains responsible; this feature helps them do it correctly.

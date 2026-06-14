@@ -27,9 +27,11 @@ declare( strict_types=1 );
 
 namespace WWU\WithdrawalButton\Frontend;
 
+use WWU\WithdrawalButton\Core\Settings;
 use WWU\WithdrawalButton\Domain\ConsentText;
 use WWU\WithdrawalButton\Domain\ExceptionTypes;
 use WWU\WithdrawalButton\Domain\ExemptionResolver;
+use WWU\WithdrawalButton\Mail\ExemptionConfirmation;
 use WWU\WithdrawalButton\Security\ClientInfo;
 use WWU\WithdrawalButton\Storage\LogRepository;
 
@@ -155,12 +157,27 @@ final class WooCheckoutConsent {
 			return;
 		}
 
-		$entries = self::build_consent_entries( $map, $this->posted_consent(), ClientInfo::ip() );
+		$entries = self::build_consent_entries( $map, $this->posted_consent(), self::captured_ip() );
 		if ( empty( $entries ) ) {
 			return;
 		}
 		// update_meta_data on the in-flight order persists when WooCommerce saves it.
 		$order->update_meta_data( WWU_WB_META_PREFIX . 'consent', $entries );
+	}
+
+	/**
+	 * The client IP to store with the consent, honouring the merchant's setting.
+	 *
+	 * The IP is the most exposed field under the GDPR strict-necessity test, so the
+	 * merchant can turn it off (`wwu_wb_settings['consent_capture_ip']`, default on).
+	 * It is stored ONLY on the order meta (purgeable), never in the immutable log.
+	 *
+	 * @return string
+	 */
+	private static function captured_ip(): string {
+		$main    = Settings::main();
+		$capture = array_key_exists( 'consent_capture_ip', $main ) ? ! empty( $main['consent_capture_ip'] ) : true;
+		return $capture ? ClientInfo::ip() : '';
 	}
 
 	/**
@@ -207,14 +224,13 @@ final class WooCheckoutConsent {
 			)
 		);
 
-		// Immutable-log evidence event (non-PII payload; IP kept as legal evidence).
-		$ip      = '';
+		// Immutable-log evidence event. PII-FREE on purpose: the IP + verbatim text
+		// live ONLY on the order meta (_wwu_wb_consent), which the retention purge can
+		// anonymise. The hash-chained log keeps just the text_hash + reason + timestamp,
+		// so it stays tamper-evident AND purge-compatible (the chain is never rewritten).
 		$payload = array();
 		foreach ( $entries as $entry ) {
-			$entry = (array) $entry;
-			if ( '' === $ip && ! empty( $entry['ip'] ) ) {
-				$ip = (string) $entry['ip'];
-			}
+			$entry     = (array) $entry;
 			$payload[] = array(
 				'product_id'   => (int) ( $entry['product_id'] ?? 0 ),
 				'reason_id'    => (string) ( $entry['reason_id'] ?? '' ),
@@ -232,11 +248,24 @@ final class WooCheckoutConsent {
 				'customer_email' => (string) $order->get_billing_email(),
 				'event'          => 'exemption_consent',
 				'payload'        => array( 'entries' => $payload ),
-				'ip_address'     => $ip,
+				'ip_address'     => '',
 			)
 		);
 
+		// Durable-medium confirmation (Art. 8(7) CRD / Art. 51(7) CdC): constitutive
+		// for the digital exemption, independent duty for services. Emitted now (before
+		// performance begins) and logged as its own delivery event — the consent log
+		// alone does not prove the confirmation was delivered.
+		$confirmed = ExemptionConfirmation::send_for_order(
+			'woocommerce',
+			(string) $order_id,
+			(string) $order->get_billing_email(),
+			(string) $order->get_order_number(),
+			$entries
+		);
+
 		$order->update_meta_data( WWU_WB_META_PREFIX . 'consent_logged', gmdate( 'c' ) );
+		$order->update_meta_data( WWU_WB_META_PREFIX . 'consent_confirmation_sent', $confirmed ? gmdate( 'c' ) : '0' );
 		$order->save();
 	}
 

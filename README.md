@@ -61,6 +61,7 @@ We document limitations openly. None of these block the legal compliance core �
 | [SPEC](docs/specs/wwu-wb-eu-withdrawal-button-SPEC.md) | Full technical specification (12 sections) |
 | [Legal reference](docs/legal/wwu-wb-legal-reference.md) | Verbatim statutory text (Art. 11a EN+IT, Art. 54-bis, Annex I-B, per-country labels) |
 | [Compliance matrix](docs/legal/wwu-wb-compliance-matrix.md) | Every legal obligation → feature → test |
+| [Exemption-consent evidence note](docs/legal/wwu-wb-exemption-consent-evidence-NOTE.md) | What the law requires for recording the Art. 59 exemption consents (burden of proof, durable-medium confirmation, retention, GDPR basis) — verified against official sources |
 | [Roadmap](docs/plans/wwu-wb-roadmap-PLAN.md) | Phased implementation plan |
 | [MASTER index](MASTER-wwu-wb.md) | One-page project index |
 

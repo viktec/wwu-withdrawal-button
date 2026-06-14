@@ -5,6 +5,46 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Exemptions feature — P3: durable-medium confirmation + evidence, retention, GDPR (1.0.0-alpha.29, 2026-06-14)
+Closes the gaps an official-source legal review surfaced
+([legal note](../legal/wwu-wb-exemption-consent-evidence-NOTE.md), verified against EUR-Lex /
+Gazzetta Ufficiale / Garante + EDPB). The checkout capture (P2) proved *what* the consumer
+accepted; this phase delivers the rest the law actually requires.
+- **Durable-medium confirmation e-mail (`ExemptionConfirmation`)** — for the digital exemption
+  the confirmation on a durable medium is **constitutive** (Art. 16(1)(m)(iii) + 14(4)(b)(iii)
+  CRD = Art. 59(1)(o) CdC): without it the exemption does not hold. On order creation the
+  plugin now e-mails the consumer a confirmation **reproducing the verbatim consent +
+  acknowledgement** wording, before performance begins, for both conditional reasons, and
+  **logs the dispatch as its own immutable-log event** (`exemption_confirmation_sent`) — the
+  consent log alone does not prove delivery, so the two legal acts are logged separately.
+- **Retention + purge (`ConsentRetention`)** — a daily cron anonymises the IP on stored
+  consents once the configurable horizon (`retention_years`, default 10y per art. 2946 c.c.)
+  lapses. GDPR storage limitation (Art. 5(1)(e) + recital 39) requires a deletion horizon — an
+  "immutable forever" record is itself a defect. The consent immutable-log events are now
+  **PII-free** (text hash + reason + timestamp only); the IP lives **only** on the purgeable
+  order meta, so the hash chain stays verifiable while the personal data is erasable.
+- **Configurable IP capture** — `wwu_wb_settings['consent_capture_ip']` (default on). The IP is
+  the most exposed field under the GDPR strict-necessity test, so the merchant can turn it off;
+  the wording + hash + timestamp remain.
+- **GDPR privacy clause** — a second ready-to-paste clause (`consent_privacy`, IT/EN) covers the
+  consent-evidence processing with the correct basis: **legitimate interest (Art. 6(1)(f))**,
+  retention tied to the limitation period, Art. 21 objection, Art. 17(3)(e) limit — **not** GDPR
+  consent. Surfaced on the Compliance page.
+- **"Consent records" admin page** — a paginated, CSV-exportable list (order, reason, date,
+  text hash, IP/anonymised, confirmation status), framed as **evidence to discharge the burden
+  of proof, not a legally-named "register"**. CSV-injection guarded.
+- **Copy-everywhere** — Settings exemptions section, the conditional-reason hints, the dashboard
+  "why the button might not show", README + readme.txt FAQ/Privacy and the marketing docs now
+  state clearly: **physical products never need consent**; only the two conditional reasons do;
+  the plugin captures consent first, then hides the button; without consent the button stays
+  (fail-safe); and the stored consent is **evidence**, not a register.
+- **Legal note** `docs/legal/wwu-wb-exemption-consent-evidence-NOTE.md` — the verified basis the
+  above is built on (no named register; durable-medium constitutive for digital; 10y defensible
+  retention; lawful basis = legitimate interest; tamper-evident anchoring is best practice, not a
+  mandate). **Not legal advice** — re-verify the in-force CdC text on Normattiva (post D.Lgs.
+  26/2023) and have counsel validate the final copy.
+- Smoke suite `consent` extended (privacy clause present IT/EN; confirmation no-op guards).
+
 ### Exemptions feature — P2: checkout consent capture (1.0.0-alpha.28, 2026-06-14)
 Second phase of the Art. 59 / Art. 16 exemptions feature
 ([SPEC](../specs/wwu-wb-withdrawal-exemptions-SPEC.md)). The two **conditional**
