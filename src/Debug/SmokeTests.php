@@ -46,6 +46,7 @@ final class SmokeTests {
 		'durable_medium' => 'suite_durable_medium',
 		'rfc3161'        => 'suite_rfc3161',
 		'fluentcart'     => 'suite_fluentcart',
+		'exemptions'     => 'suite_exemptions',
 	);
 
 	/**
@@ -462,6 +463,91 @@ final class SmokeTests {
 			false !== strpos( $path, 'wwu-wb/receipts' ) && false !== strpos( $path, $uid . '.pdf' ),
 			'Receipt store path is confined and uid-named.'
 		);
+
+		return $tests;
+	}
+
+	/**
+	 * Suite: exemptions (Art. 59 registry + per-reason resolver + evaluator gates).
+	 *
+	 * @return array
+	 */
+	private function suite_exemptions(): array {
+		$tests = array();
+		$types = '\\WWU\\WithdrawalButton\\Domain\\ExceptionTypes';
+		$ev    = new \WWU\WithdrawalButton\Domain\ArticleFiftyNineEvaluator();
+
+		// Registry sanity.
+		$tests[] = $this->assert( 'exemptions.registry_digital_conditional', $types::is_conditional( '59_o' ), 'Digital-immediate (59_o) is conditional.' );
+		$tests[] = $this->assert( 'exemptions.registry_service_conditional', $types::is_conditional( '59_a' ), 'Service-performed (59_a) is conditional.' );
+		$tests[] = $this->assert( 'exemptions.registry_custom_unconditional', ! $types::is_conditional( '59_c' ), 'Custom-made (59_c) is unconditional.' );
+		$tests[] = $this->assert( 'exemptions.registry_hygiene_seal', $types::is_seal_based( '59_e' ), 'Sealed hygiene (59_e) is seal-based.' );
+
+		// Helper to build a single-item / multi-item order.
+		$mk = function ( array $product_ids ) {
+			$items = array();
+			foreach ( $product_ids as $pid ) {
+				$items[] = array( 'product_id' => (int) $pid, 'name' => 'P' . $pid, 'qty' => 1, 'virtual' => false, 'downloadable' => false, 'type' => 'simple', 'category_ids' => array() );
+			}
+			return $this->fake_order( 'IT', 'completed', false, $items );
+		};
+
+		// Back-compat filter → 'manual' (unconditional) → exempt.
+		$f = static function ( $ids ) {
+			$ids[] = 4242;
+			return $ids;
+		};
+		add_filter( 'wwu_wb_excluded_product_ids', $f );
+		$tests[] = $this->assert( 'exemptions.filter_excludes_single', ! $ev->has_withdrawable_item( $mk( array( 4242 ) ) ), 'Filter-excluded single-item order has no withdrawable item.' );
+		$tests[] = $this->assert( 'exemptions.mixed_cart_still_shows', $ev->has_withdrawable_item( $mk( array( 4242, 1 ) ) ), 'Mixed cart (excluded + normal) stays withdrawable.' );
+		remove_filter( 'wwu_wb_excluded_product_ids', $f );
+
+		// Per-reason via option: tag product 7777 under the conditional 59_o.
+		$saved = get_option( 'wwu_wb_exclusions' );
+		update_option(
+			'wwu_wb_exclusions',
+			array(
+				'by_reason'           => array( '59_o' => array( 'products' => array( 7777 ), 'categories' => array() ) ),
+				'auto_detect_virtual' => false,
+			)
+		);
+		\WWU\WithdrawalButton\Core\Settings::flush();
+
+		$tests[] = $this->assert( 'exemptions.conditional_no_consent_keeps_button', $ev->has_withdrawable_item( $mk( array( 7777 ) ) ), 'Conditional reason WITHOUT captured consent keeps the button (fail-safe).' );
+
+		$cf = static function ( $consent ) {
+			$consent[] = array( 'product_id' => 7777, 'reason_id' => '59_o' );
+			return $consent;
+		};
+		add_filter( 'wwu_wb_exemption_consent', $cf );
+		$tests[] = $this->assert( 'exemptions.conditional_with_consent_exempts', ! $ev->has_withdrawable_item( $mk( array( 7777 ) ) ), 'Conditional reason WITH captured consent exempts the item.' );
+		remove_filter( 'wwu_wb_exemption_consent', $cf );
+
+		// Tag a product under a seal-based reason → never auto-hidden.
+		update_option(
+			'wwu_wb_exclusions',
+			array(
+				'by_reason'           => array( '59_e' => array( 'products' => array( 8888 ), 'categories' => array() ) ),
+				'auto_detect_virtual' => false,
+			)
+		);
+		\WWU\WithdrawalButton\Core\Settings::flush();
+		$tests[] = $this->assert( 'exemptions.seal_based_keeps_button', $ev->has_withdrawable_item( $mk( array( 8888 ) ) ), 'Seal-based reason never auto-hides the button.' );
+
+		// Unconditional reason → exempt.
+		update_option(
+			'wwu_wb_exclusions',
+			array(
+				'by_reason'           => array( '59_c' => array( 'products' => array( 9999 ), 'categories' => array() ) ),
+				'auto_detect_virtual' => false,
+			)
+		);
+		\WWU\WithdrawalButton\Core\Settings::flush();
+		$tests[] = $this->assert( 'exemptions.unconditional_exempts', ! $ev->has_withdrawable_item( $mk( array( 9999 ) ) ), 'Unconditional reason (custom-made) exempts the item.' );
+
+		// Restore.
+		update_option( 'wwu_wb_exclusions', is_array( $saved ) ? $saved : array() );
+		\WWU\WithdrawalButton\Core\Settings::flush();
 
 		return $tests;
 	}

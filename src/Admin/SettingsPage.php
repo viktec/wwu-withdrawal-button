@@ -85,6 +85,7 @@ final class SettingsPage {
 
 		$this->render_applicability_section( $settings );
 		$this->render_guidance_section( $settings );
+		$this->render_exemptions_section();
 		$this->render_receipt_section( $settings );
 
 		echo '<h2>' . esc_html__( 'Debug', 'wwu-withdrawal-button' ) . '</h2>';
@@ -478,6 +479,72 @@ final class SettingsPage {
 	}
 
 	/**
+	 * Render the "Exemptions (Art. 59)" section: per-reason product/category pickers.
+	 *
+	 * The right of withdrawal is the default; the merchant tags only the products /
+	 * categories that fall under a specific statutory exception. Conditional reasons
+	 * (service performed / digital immediate) note that the button is hidden only
+	 * once consent is captured (a later phase); seal-based reasons note they are not
+	 * auto-hidden. Standard #12: every reason ships its legal ref + plain-language hint.
+	 *
+	 * @return void
+	 */
+	private function render_exemptions_section(): void {
+		$exclusions = (array) get_option( 'wwu_wb_exclusions', array() );
+		$by_reason  = ( isset( $exclusions['by_reason'] ) && is_array( $exclusions['by_reason'] ) ) ? $exclusions['by_reason'] : array();
+		$auto       = ! empty( $exclusions['auto_detect_virtual'] );
+
+		// Surface any legacy flat lists under the generic 'manual' picker.
+		$legacy_p = array_map( 'intval', (array) ( $exclusions['excluded_product_ids'] ?? array() ) );
+		$legacy_c = array_map( 'intval', (array) ( $exclusions['excluded_category_ids'] ?? array() ) );
+
+		echo '<h2>' . esc_html__( 'Exemptions (Art. 59)', 'wwu-withdrawal-button' ) . '</h2>';
+		echo '<p class="description" style="max-width:860px;">' . wp_kses_post( __( 'The right of withdrawal applies <strong>by default</strong> — including to digital products. Exempt a product or category only when a specific statutory exception actually applies. Enter product IDs and/or category IDs (comma-separated) under the matching reason. For the two <strong>conditional</strong> reasons the button is hidden only once the consumer\'s consent + acknowledgement is captured at checkout (a later release) — until then the button stays, which is the safe, compliant default. Seal-based reasons depend on the consumer unsealing after delivery, so they are never auto-hidden.', 'wwu-withdrawal-button' ) ) . '</p>';
+
+		echo '<table class="form-table" role="presentation"><tbody>';
+
+		foreach ( \WWU\WithdrawalButton\Domain\ExceptionTypes::all() as $id => $def ) {
+			if ( 'manual' === $id ) {
+				continue; // Rendered last, merged with any legacy flat lists.
+			}
+			$row = ( isset( $by_reason[ $id ] ) && is_array( $by_reason[ $id ] ) ) ? $by_reason[ $id ] : array();
+			$p   = implode( ', ', array_map( 'intval', (array) ( $row['products'] ?? array() ) ) );
+			$c   = implode( ', ', array_map( 'intval', (array) ( $row['categories'] ?? array() ) ) );
+
+			$tag = '';
+			if ( ! empty( $def['conditional'] ) ) {
+				$tag = ' <span style="display:inline-block;background:#fcf0d3;color:#7a4100;font-size:11px;padding:1px 7px;border-radius:10px;">' . esc_html__( 'needs consent', 'wwu-withdrawal-button' ) . '</span>';
+			} elseif ( ! empty( $def['seal_based'] ) ) {
+				$tag = ' <span style="display:inline-block;background:#e7e9ec;color:#444;font-size:11px;padding:1px 7px;border-radius:10px;">' . esc_html__( 'not auto-hidden', 'wwu-withdrawal-button' ) . '</span>';
+			}
+
+			echo '<tr><th scope="row" style="font-weight:600;">' . esc_html( (string) $def['label'] ) . $tag // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $tag is static escaped markup.
+				. '<br><span style="font-weight:400;color:#666;font-size:12px;">' . esc_html( (string) $def['legal_ref'] ) . '</span></th><td>';
+			echo '<label style="margin-right:14px;">' . esc_html__( 'Product IDs', 'wwu-withdrawal-button' ) . ' <input type="text" class="regular-text" name="exempt[' . esc_attr( (string) $id ) . '][products]" value="' . esc_attr( $p ) . '" placeholder="' . esc_attr__( 'e.g. 12, 84', 'wwu-withdrawal-button' ) . '"></label>';
+			echo '<label>' . esc_html__( 'Category IDs', 'wwu-withdrawal-button' ) . ' <input type="text" class="regular-text" name="exempt[' . esc_attr( (string) $id ) . '][categories]" value="' . esc_attr( $c ) . '" placeholder="' . esc_attr__( 'e.g. 5', 'wwu-withdrawal-button' ) . '"></label>';
+			echo '<p class="description">' . esc_html( (string) $def['hint'] ) . '</p>';
+			echo '</td></tr>';
+		}
+
+		// Manual / legacy catch-all reason.
+		$manual    = ( isset( $by_reason['manual'] ) && is_array( $by_reason['manual'] ) ) ? $by_reason['manual'] : array();
+		$manual_p  = array_values( array_unique( array_merge( array_map( 'intval', (array) ( $manual['products'] ?? array() ) ), $legacy_p ) ) );
+		$manual_c  = array_values( array_unique( array_merge( array_map( 'intval', (array) ( $manual['categories'] ?? array() ) ), $legacy_c ) ) );
+		echo '<tr><th scope="row" style="font-weight:600;">' . esc_html__( 'Manually excluded (no specific reason)', 'wwu-withdrawal-button' ) . '</th><td>';
+		echo '<label style="margin-right:14px;">' . esc_html__( 'Product IDs', 'wwu-withdrawal-button' ) . ' <input type="text" class="regular-text" name="exempt[manual][products]" value="' . esc_attr( implode( ', ', $manual_p ) ) . '"></label>';
+		echo '<label>' . esc_html__( 'Category IDs', 'wwu-withdrawal-button' ) . ' <input type="text" class="regular-text" name="exempt[manual][categories]" value="' . esc_attr( implode( ', ', $manual_c ) ) . '"></label>';
+		echo '<p class="description">' . esc_html__( 'Catch-all. Prefer a specific reason above so the exemption is auditable. (Migrated from any older exclusion list.)', 'wwu-withdrawal-button' ) . '</p>';
+		echo '</td></tr>';
+
+		// Legacy crude auto-detect toggle.
+		echo '<tr><th scope="row">' . esc_html__( 'Auto-exclude delivered digital (legacy)', 'wwu-withdrawal-button' ) . '</th><td>';
+		echo '<label><input type="checkbox" name="exempt_auto_detect" value="1" ' . checked( $auto, true, false ) . '> ' . esc_html__( 'Treat virtual/downloadable items on completed orders as exempt. OFF by default — the proper path is the "Digital content with immediate access" reason with consent capture.', 'wwu-withdrawal-button' ) . '</label>';
+		echo '</td></tr>';
+
+		echo '</tbody></table>';
+	}
+
+	/**
 	 * Handle the settings POST (admin-post.php). PRG redirect on success.
 	 *
 	 * @return void
@@ -511,6 +578,31 @@ final class SettingsPage {
 			'b2b_vat_out_of_scope' => Sanitizer::bool( $_POST['applicability_b2b'] ?? '' ),
 		);
 		update_option( 'wwu_wb_applicability', $applicability );
+
+		// Exemptions (Art. 59) — per-reason product/category maps. Only registered
+		// reasons are kept; the legacy flat lists are migrated away (now under
+		// by_reason.manual). The crude auto-detect toggle stays for back-compat.
+		$posted_exempt = ( isset( $_POST['exempt'] ) && is_array( $_POST['exempt'] ) ) ? (array) wp_unslash( $_POST['exempt'] ) : array(); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- each field is cast to ints below.
+		$by_reason     = array();
+		foreach ( $posted_exempt as $reason => $sets ) {
+			$reason = sanitize_key( (string) $reason );
+			if ( ! \WWU\WithdrawalButton\Domain\ExceptionTypes::exists( $reason ) ) {
+				continue;
+			}
+			$products   = $this->parse_id_list( $sets['products'] ?? '' );
+			$categories = $this->parse_id_list( $sets['categories'] ?? '' );
+			if ( ! empty( $products ) || ! empty( $categories ) ) {
+				$by_reason[ $reason ] = array(
+					'products'   => $products,
+					'categories' => $categories,
+				);
+			}
+		}
+		$exclusions                        = (array) get_option( 'wwu_wb_exclusions', array() );
+		$exclusions['by_reason']           = $by_reason;
+		$exclusions['auto_detect_virtual'] = Sanitizer::bool( $_POST['exempt_auto_detect'] ?? '' );
+		unset( $exclusions['excluded_product_ids'], $exclusions['excluded_category_ids'] );
+		update_option( 'wwu_wb_exclusions', $exclusions );
 
 		// Timestamp provider.
 		$timestamp = (array) get_option( 'wwu_wb_timestamp', array() );
@@ -567,5 +659,23 @@ final class SettingsPage {
 			)
 		);
 		exit;
+	}
+
+	/**
+	 * Parse a comma-separated ID list into a clean array of positive ints.
+	 *
+	 * @param mixed $value Raw input (string or array).
+	 * @return int[]
+	 */
+	private function parse_id_list( $value ): array {
+		$value = is_array( $value ) ? implode( ',', $value ) : (string) $value;
+		$ids   = array_map( 'intval', array_map( 'trim', explode( ',', $value ) ) );
+		$ids   = array_filter(
+			$ids,
+			static function ( $id ) {
+				return $id > 0;
+			}
+		);
+		return array_values( array_unique( $ids ) );
 	}
 }

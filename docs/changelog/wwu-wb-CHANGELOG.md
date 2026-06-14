@@ -5,6 +5,32 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Exemptions feature — P1: per-reason tagging + evaluator (1.0.0-alpha.27, 2026-06-14)
+First phase of the Art. 59 / Art. 16 product/service exemptions feature
+([SPEC](../specs/wwu-wb-withdrawal-exemptions-SPEC.md)). The withdrawal right stays
+the default (digital included); the merchant now tags only what the law actually
+exempts, by **specific statutory reason** — not an opaque boolean.
+- **`ExceptionTypes` registry** — one entry per Art. 59 letter `{ id, label, legal_ref,
+  conditional, consent_kind, seal_based, hint }`, filterable via `wwu_wb_exception_types`.
+  Two conditional reasons (service performed 59_a, digital immediate 59_o); seal-based
+  ones (59_e/59_i) that can't be known at order time; the rest unconditional.
+- **`ExemptionResolver`** — reads the new `wwu_wb_exclusions.by_reason` map (per reason:
+  product + category IDs), with the legacy flat lists + `wwu_wb_excluded_product_ids`
+  filter folded into a generic `manual` reason at read time (back-compat, no migration
+  needed).
+- **`ArticleFiftyNineEvaluator` upgraded** — an item is exempt only when its reason
+  applies: unconditional → exempt; **conditional → only when consent was captured**
+  (via the new `wwu_wb_exemption_consent` filter, which the P2 checkout layer will hook —
+  until then the button stays, fail-safe); seal-based → never auto-hidden.
+- **Admin UI** — Settings → "Exemptions (Art. 59)": a product/category-ID picker per
+  reason, each with its legal ref + plain-language hint + a "needs consent" / "not
+  auto-hidden" tag (Standard #12). Saves the `by_reason` map and migrates away the old
+  flat lists.
+- **Smoke suite `exemptions`** — registry flags, back-compat filter, mixed-cart, and the
+  conditional/seal/unconditional gates (incl. consent via the filter).
+- P2 (checkout consent capture + the durable-medium confirmation) and P3 (consumer
+  transparency copy) are the next phases.
+
 ### Status surfaces: refund detection, localized labels, prominent FluentCart button (1.0.0-alpha.26, 2026-06-14)
 More live-test polish on the per-order / chooser status surfaces:
 - **Refund now reflected on FluentCart too.** Added `OrderDataSource::is_refunded()`

@@ -183,16 +183,16 @@ final class Install {
 		add_option(
 			'wwu_wb_exclusions',
 			array(
-				'excluded_category_ids' => array(),
-				'excluded_product_ids'  => array(),
-				// Default OFF: the right of withdrawal is the default; the digital
-				// exemption (Art. 59 lett. o / Art. 16(m)) only applies when prior
-				// express consent + acknowledgment were captured — which the auto-
-				// detect does NOT verify. Auto-excluding by default would hide the
-				// button from consumers who may still have the right (under-compliance)
-				// and contradicts the admin copy. Merchants opt in (or use the proper
-				// exemptions feature with consent capture).
-				'auto_detect_virtual'   => false,
+				// Per-reason exemption map: { '<59_x>': { products:[], categories:[] } }.
+				// The merchant tags products/categories under a specific statutory
+				// reason (Art. 59) via Settings → Exemptions. Empty = nothing exempt
+				// (the right of withdrawal is the default, including digital).
+				'by_reason'           => array(),
+				// Legacy crude digital auto-detect. Default OFF: the digital exemption
+				// (Art. 59 lett. o / Art. 16(m)) only applies with captured consent +
+				// acknowledgment — which the auto-detect does NOT verify. The proper
+				// path is tagging '59_o' with consent capture.
+				'auto_detect_virtual' => false,
 			),
 			'',
 			'no'
