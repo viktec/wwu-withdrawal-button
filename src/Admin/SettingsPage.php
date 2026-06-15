@@ -14,6 +14,7 @@ declare( strict_types=1 );
 
 namespace WWU\WithdrawalButton\Admin;
 
+use WWU\WithdrawalButton\Core\Settings;
 use WWU\WithdrawalButton\Debug\Audience;
 use WWU\WithdrawalButton\Frontend\Template;
 use WWU\WithdrawalButton\Mail\WooAckEmail;

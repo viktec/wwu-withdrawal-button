@@ -4,7 +4,7 @@ Tags: woocommerce, fluentcart, right of withdrawal, recesso, gdpr
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 1.0.0-alpha.38
+Stable tag: 1.0.0-alpha.39
 License: GPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
@@ -71,6 +71,9 @@ For the conditional Art. 59 exemptions, the plugin also stores the consumer's ch
 
 == Changelog ==
 
+= 1.0.0-alpha.39 =
+* **Critical fix — the Settings page no longer fatals.** A merchant reported "Class WWU\WithdrawalButton\Admin\Settings not found", which crashed the whole settings screen. A missing `use` import made an unqualified `Settings::main()` resolve to the wrong namespace. Fixed, and a scan of all 91 source files confirmed there were no other cases. This release also carries a small mail-safety fix (the HTML mailer now always removes its `wp_mail_content_type` filter, so a third-party email error can't turn other plugins' plain-text emails into HTML) and a WooCommerce-surface + plugin-conflict audit (0 critical / 0 high). **Recommended for all installs.**
+
 = 1.0.0-alpha.38 =
 * **Subscriptions handled correctly (WooCommerce Subscriptions, FluentCart, EDD Recurring).** EU law gives one 14-day right of withdrawal per contract, at conclusion — a renewal does **not** restart it. The button now appears on the **initial order only** and is suppressed on renewal orders (single gate covering every surface). Two opt-in settings under **Settings → Subscriptions**: "also show on renewals" (off by default) and "auto-cancel the subscription on withdrawal" (off by default — the refund and any pro-rata always stay manual). The Requests dashboard flags subscription orders with a reminder. Renewal detection is guarded and fail-open (an undetermined state keeps the button visible). Needs a live test with a subscription plugin active.
 
@@ -120,6 +123,9 @@ For the conditional Art. 59 exemptions, the plugin also stores the consumer's ch
 * Foundation: bootstrap, schema (immutable log + timestamp tables), debug stack, REST diagnostics.
 
 == Upgrade Notice ==
+
+= 1.0.0-alpha.39 =
+Critical fix: the Settings page no longer crashes with a "Class … Settings not found" fatal. Update recommended for everyone. Also includes a mail-safety fix and a WooCommerce/conflict audit.
 
 = 1.0.0-alpha.38 =
 Subscriptions are now handled correctly: the withdrawal button shows on the initial order only and is hidden on renewals (one 14-day right per contract). Two opt-in toggles under Settings → Subscriptions. If you run WooCommerce Subscriptions / FluentCart subscriptions / EDD Recurring, test on staging.
