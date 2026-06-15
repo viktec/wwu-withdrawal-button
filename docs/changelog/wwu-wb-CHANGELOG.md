@@ -5,7 +5,18 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
-### WooCommerce + conflict audit; mail-filter leak fix (2026-06-15)
+### Critical fix — Settings page fatal "class not found" (1.0.0-alpha.39, 2026-06-15)
+A merchant reported a **fatal error** (`Uncaught Error: Class "WWU\WithdrawalButton\Admin\Settings"
+not found`) that took down the **entire Settings page**. Root cause: `SettingsPage::render_exemptions_status()`
+called `Settings::main()` **without** importing the class, so PHP resolved the unqualified `Settings`
+against the current namespace (`…\Admin\Settings`, which does not exist) and threw. **Fix:** added
+`use WWU\WithdrawalButton\Core\Settings;`. **`php -l` does not catch this** (it's runtime class
+resolution, not a syntax error) — so a token-based scanner was run across **all 91 `src/` files** and
+confirmed this was the **only** such bare-class fatal; every other WWU and external (`WC_*`/`WP_*`/
+`DateTime`/…) reference is either imported or fully qualified. This release also carries the WooCommerce
++ conflict audit and the mail-filter leak fix below.
+
+### WooCommerce + conflict audit; mail-filter leak fix (1.0.0-alpha.39, 2026-06-15)
 Inline WooCommerce-surface + cross-plugin **conflict** audit (the multi-agent workflow was blocked
 3× by an Anthropic server-side rate limit, so it was done file-by-file) —
 [report](../audits/wwu-wb-woocommerce-2026-06-15-AUDIT.md). **0 critical / 0 high.**
