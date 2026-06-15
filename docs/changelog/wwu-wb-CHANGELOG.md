@@ -5,6 +5,52 @@ All notable changes to this project are documented here. Format loosely follows
 
 ## [Unreleased]
 
+### Security hardening — full-plugin audit fixes (1.0.0-alpha.36, 2026-06-15)
+A comprehensive whole-plugin security audit (10 dimensions, multi-agent + adversarial verification —
+[report](../audits/wwu-wb-full-security-2026-06-15-AUDIT.md)) returned **0 critical / 0 high**: SQLi, XSS,
+CSRF, AuthZ/IDOR (incl. the new `EddCustomerOrders`), file/path/deserialization, crypto/evidence-integrity
+and the Dompdf 3.1.5 dependency all clean. One Medium + a cluster of Low items were found and fixed here.
+- **SSRF guard (Medium)** — new `Security\OutboundUrlGuard` rejects internal / cloud-metadata
+  (`169.254.169.254`) / loopback / private / CGNAT / IPv4-mapped-IPv6 targets for the merchant-configured
+  **RFC 3161 TSA endpoint** (resolves A/AAAA, fail-closed on unresolvable). Wired into
+  `Rfc3161Provider::endpoint_is_valid()` (request-time, with the existing `redirection=>0`) **and**
+  `SettingsPage::handle_save()` (never persists an unsafe endpoint). `wp_http_validate_url()` alone was
+  insufficient (no IPv6, misses 169.254/16 + 100.64/10). Mirrors WWU Pixel Manager's `SgtmGuard`.
+- **Rate limiting (Low)** — `GuestAccess::check_rate_limit()` (10/5 min per IP) now also gates
+  `WithdrawalRoute::statement()`/`confirm()` and the no-JS `NoScriptFlow` handlers (were only on `lookup` +
+  receipt), preventing authorised-credential griefing/log-bloat.
+- **Input caps (Low)** — `WithdrawalRequest::from_input()` length-caps name (200) / order_ref (100) /
+  email (254) / reason (2000), so an oversized field can't bloat the append-only log or heavy PDF renders.
+- **Debug masking (Low)** — added `'pass'` to `Collector::SECRET_KEY_HINTS` (the 4-char RFC3161 `pass` key
+  was below the substring hints; no active leak, latent).
+- **Uninstall (Low)** — clear the `wwu_wb_consent_retention_purge` cron on uninstall.
+- **Tracked (not changed):** `customer_email` column excluded from the hash chain (needs a chain-format
+  decision); the email-in-immutable-log GDPR trade-off (documented). The multisite-uninstall batching item
+  was **refuted** as a security finding (super-admin hygiene).
+- Lint: PHP 0 errors (1 new file + 7 changed). No consumer-facing behaviour change.
+
+### EDD integration completed — customer-facing withdrawal button + e-mail link (1.0.0-alpha.35, 2026-06-15)
+Closes the EDD gap: the statutory withdrawal button — the plugin's single most important surface — now
+appears on the EDD customer's own pages, reaching full parity with WooCommerce (`WooMyAccount`) and
+FluentCart (`FluentCartPortal`). Previously EDD was a data-adapter + checkout-consent integration only, and
+EDD customers could reach the form only via the standalone public page. Hooks verified against the official
+EDD source first — see [EDD customer surfaces analysis](../analysis/wwu-wb-edd-customer-surfaces-ANALYSIS.md).
+- **`Frontend\EddCustomerOrders`** (new) — injects the withdrawal button on the **purchase receipt**
+  (`edd_order_receipt_after_table`) and at the end of each **purchase-history** order row
+  (`edd_order_history_row_end`), and appends the withdrawal **link to the receipt e-mail** body
+  (`edd_order_receipt` filter, EDD 3.2.0+, with the legacy `edd_purchase_receipt` filter wired for 3.0–3.1
+  and de-duplicated so 3.2+ never appends twice). All EDD 3.x hooks (the legacy 2.x `edd_payment_receipt_*`
+  / `edd_purchase_history_row_*` hooks were **removed** from the 3.x templates — using them would have been a
+  silent dead button).
+- The button links to the standalone public form page pre-authenticated with the EDD **payment key**
+  (`?wwu_wb_order=&key=`), exactly like the WooCommerce order-email link; EDD has no routable My Account
+  endpoint, so the public page remains the form host.
+- **Fail-safe everywhere:** renders nothing on ineligible orders, shows the localized status notice when a
+  request already exists, and skips when no public page is configured. Inline button styles (EDD
+  receipt/history pages don't load the plugin stylesheet). No new i18n strings (reuses the statutory label).
+- Wired in `Plugin.php` in the EDD-active block. Lint: PHP 0 errors. **Needs a live EDD test** — see the EDD
+  evaluator checklist.
+
 ### Docs — end-to-end "try the plugin" evaluator checklists (docs-only, 2026-06-15)
 Adds a full `docs/testing/` suite so anyone can evaluate the plugin on a staging store, plus an index
 ([docs/testing/README.md](../testing/README.md)). Grounded in a code-recon pass (accurate shortcodes,
