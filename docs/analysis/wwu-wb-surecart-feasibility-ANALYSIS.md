@@ -60,3 +60,27 @@ Official SureCart developer docs — see the full agent report; key pages:
 [Metadata API](https://developer.surecart.com/api-reference/metadata),
 [Templates actions](https://developer.surecart.com/documentation/actions-filters/templates),
 [Customer dashboard shortcodes](https://surecart.com/docs/customer-dashboard-shortcodes/).
+
+## Outreach — questions to confirm with the SureCart team (2026-06-15)
+Requested by the user after Anil Agrawal asked for SureCart support on the FB launch thread. Send this to
+SureCart developer support / partnerships before committing to the adapter. Two blockers + seven details:
+
+**Blockers**
+1. **Guest order ownership** — supported server-side (PHP) way to verify a not-logged-in buyer owns a given
+   order (WooCommerce `order_key` equivalent)? Or is order access effectively logged-in-only?
+2. **Order-confirmation email** — can the email SureCart sends be extended from the WP side (hook/filter to
+   append a block), or only via the SureCart dashboard email editor? Needed to carry the statutory notice/link.
+
+**Details**
+3. Custom metadata on a *completed Order* (we saw it on Checkout + Product) — or do we use our own WP side table?
+4. Exact ISO-3166 alpha-2 country field on `customer.billing_address`.
+5. Full order `status` enum + where the paid timestamp lives (`paid_at` on Order, or via a `Charge` expand?).
+6. Initial-vs-renewal: is `surecart/purchase_created` vs `surecart/subscription_renewed` the right signal, or
+   is there an `is_renewal`-type flag on the order itself?
+7. SDK write path to cancel a subscription at period end (`cancel_at_period_end`).
+8. Are `surecart/order_created` + `surecart/subscription_renewed` webhooks available, and on by default?
+9. Recommended hook/filter to render UI inside the customer dashboard
+   (`surecart_template_dashboard_body_open` / a `render_block` filter?).
+
+The full copy-paste outreach message lives in the conversation; this list is the durable record of what we need
+answered to unblock the adapter.
