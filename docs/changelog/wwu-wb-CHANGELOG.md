@@ -3,6 +3,34 @@
 All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); the project uses Semantic Versioning.
 
+## [1.1.0] — 2026-06-18 — Evidence-log hardening (security-audit follow-up)
+
+Closes the three deeper integrity/privacy findings from the 2026-06-17 audit
+(`docs/audits/wwu-wb-full-2026-06-17-AUDIT.md`) before the wordpress.org submission.
+No change to the withdrawal flow; existing logs keep verifying.
+
+**HIGH-1 — keyed hash chain.** Each row hash is now HMAC-SHA256 keyed with the site
+secret (`LogChain` v2), so a DB-write attacker WITHOUT the secret can no longer
+recompute a forged chain. Every row records its `chain_version`; legacy v1 rows
+(unkeyed SHA-256) still verify, so a mixed chain stays valid. (schema 2 → 3, Migration_3.)
+
+**MEDIUM-1 — GDPR erasure horizon for the log IP.** The hash now commits to the
+ANONYMISED IP (`wp_privacy_anonymize_ip`); the full IP is stored in a new non-hashed
+`ip_full` column, retained for the legal window then blanked by the retention purge
+(together with `customer_email`). The hashed evidence is never rewritten, so erasing
+the PII never breaks the chain.
+
+**HIGH-2 — timestamp verification + retry.** RFC 3161 now requires HTTPS by default
+(`wwu_wb_rfc3161_allow_insecure_http` to override) and binds the returned token to the
+exact submitted digest + nonce — a TSA/MITM cannot return a token for a different hash.
+(Full TSA-signature verification is delegated to an external/qualified verifier using
+the retained token.) OpenTimestamps / initial stamps that fail (e.g. calendars down)
+are now retried on the hourly cron instead of being abandoned, and the admin Requests
+screen surfaces any confirmed records that are not yet externally anchored.
+
+Smoke tests added: v2 keyed hash, IP anonymisation, schema-v3 columns, https-required,
+un-anchored count.
+
 ## [1.0.1] — 2026-06-17 — wordpress.org readiness + security hardening
 
 Prepares the wordpress.org directory submission and lands the low-risk fixes from a full

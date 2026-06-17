@@ -894,6 +894,20 @@ final class SmokeTests {
 			$tests[] = $this->assert( 'rfc3161.reflection', false, 'Reflection check failed: ' . $e->getMessage() );
 		}
 
+		// HTTPS is required by default (the TSA signature is verified out-of-band).
+		try {
+			$http_prov = new \WWU\WithdrawalButton\Timestamp\Rfc3161Provider( array( 'endpoint' => 'http://timestamp.example.com' ) );
+			$valid     = new \ReflectionMethod( $http_prov, 'endpoint_is_valid' );
+			$valid->setAccessible( true );
+			$tests[] = $this->assert( 'rfc3161.https_required', false === $valid->invoke( $http_prov ), 'A plaintext http TSA endpoint is rejected by default.' );
+		} catch ( \Throwable $e ) {
+			$tests[] = $this->assert( 'rfc3161.https_required', false, 'Reflection check failed: ' . $e->getMessage() );
+		}
+
+		// Un-anchored confirmed-row count (surfaced in admin; cron retries them).
+		$unanchored = ( new \WWU\WithdrawalButton\Timestamp\TimestampService() )->count_unanchored();
+		$tests[] = $this->assert( 'timestamp.unanchored_count', is_int( $unanchored ) && $unanchored >= 0, 'Un-anchored confirmed-row count is a non-negative int (got ' . var_export( $unanchored, true ) . ').' );
+
 		// Return the flat test array like every other suite — run() wraps it in
 		// { name, tests }. Returning the wrapped shape here double-wrapped it, so
 		// the JSON `tests` became an object and the Inspector's forEach threw.

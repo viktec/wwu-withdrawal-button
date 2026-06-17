@@ -34,7 +34,22 @@ qualify the product's core legal claim and should be addressed in a focused foll
 > Excluding the whole `src/Debug/` directory was also rejected: the `Debug` facade is used
 > throughout the runtime; only the one localhost literal needed changing.
 
-## Deferred to a follow-up (1.1) — integrity & privacy of the evidence log
+## Resolved in 1.1.0 — integrity & privacy of the evidence log
+
+**Update 2026-06-18:** all three were fixed in `1.1.0` (before the wordpress.org submission) —
+see the CHANGELOG `[1.1.0]` entry. Summary of the fixes:
+
+- **HIGH-1** → the per-row hash is now HMAC-keyed with the site secret (`LogChain` v2); every row
+  records its `chain_version`, legacy v1 rows still verify (schema 2 → 3, `Migration_3`).
+- **HIGH-2** → RFC 3161 requires HTTPS by default and binds the token to the exact submitted
+  digest + nonce; OpenTimestamps/initial stamps that fail are retried on cron; un-anchored rows
+  are surfaced in admin. (Full TSA-signature / `.ots` Bitcoin verification remains delegated to
+  an external/qualified verifier using the retained, self-contained proof.)
+- **MEDIUM-1** → the hash commits to the anonymised IP; the full IP lives in a new non-hashed
+  `ip_full` column, retained for the legal window then blanked (with `customer_email`) by the
+  retention purge — the chain is never rewritten.
+
+The original analysis is kept below for the record.
 
 These are real, but they are **not** remote-exploit vulnerabilities and they do not block the
 directory submission. They touch the legal-evidence design, so they want a deliberate change +
