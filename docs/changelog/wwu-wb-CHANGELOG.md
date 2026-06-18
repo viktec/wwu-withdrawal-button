@@ -3,6 +3,56 @@
 All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); the project uses Semantic Versioning.
 
+## [1.2.0] — 2026-06-18 — "Update your legal texts too" merchant reminder
+
+Prompted by EU consumer lawyer Alessandro Vercellotti's public note: *the button is
+mandatory, but the Terms & Conditions of sale must also be amended in the withdrawal
+article to provide for the new button modality.* He is right — Art. 6 of the Consumer
+Rights Directive requires the trader to inform the consumer **how** to exercise the
+withdrawal, and that information now has to include the online button. Installing the
+plugin adds the button; it does not (and cannot) edit the merchant's own published
+documents. This release makes that impossible to miss and gives the merchant the exact
+text to paste. No change to the withdrawal flow, storage, or evidence.
+
+**Plugin (admin):**
+- `DashboardPage` — new prominent reminder card right after the setup checklist:
+  *"Installing the button is not enough — update your legal texts too"* + a button
+  linking to the Compliance page where the ready-to-paste clauses live.
+- `ComplianceStatusPage` — a `notice-warning` callout at the top of "Documents to
+  update" stating the same point, and the two clauses the merchant must paste
+  (pre-contractual information + general terms) now render **open by default** so they
+  are not overlooked inside the collapsed list.
+- `ClauseLibrary` — the `terms` ("How to withdraw") clause now **names the button
+  explicitly** ("the dedicated online withdrawal button / l'apposito pulsante di recesso
+  online — 'Recedere dal contratto qui'"), throughout the withdrawal period, alongside
+  the Annex I-B model form. IT + EN. The `precontractual` clause already named it.
+
+**Docs + web:**
+- Marketing landing + documentation pages updated with a "you must also update your
+  Terms & pre-contractual withdrawal clause" note.
+- readme.txt changelog + Upgrade Notice.
+
+**Documentation overhaul (same release) — explain how it works + showcase every helpful feature.**
+On user request ("explain better how it works; put all the features that help the user, properly"):
+- `readme.txt` (wp.org) Description rewritten: a plain-language **"How it works (in 4 steps)"** walkthrough
+  + a complete, grouped feature list (For your customers / For you the merchant / Smart legal handling /
+  Evidence & timestamps / Privacy & GDPR / Documents / Integrations & automation / Platforms & licence).
+  Previously the Description was 7 terse bullets that hid the merchant cockpit, requests management,
+  automations, privacy tooling, etc.
+- `README.md` (GitHub): added the same 4-step "How it works" lead + 4 missing feature bullets (merchant
+  cockpit incl. the e-mail delivery test, readable verification certificate, privacy/GDPR by design, the
+  legal-texts reminder); status badge 1.0.0 → 1.2.0; Status section corrected (1.1.1 in wp.org review,
+  1.2.0 ships via SVN after approval).
+- `docs.html` (public docs): new **"Come funziona (in pratica)"** section (4 steps + an at-a-glance
+  summary of the full feature set, each item linking to its detailed section) + sidebar nav entries for it
+  and for the legal-docs section.
+- `landing.html`: added showcase cards for **Automazioni &amp; API**, **Privacy &amp; GDPR by design**
+  and **Gestione richieste** (the requests dashboard) — features that help the user but weren't shown.
+  (landing.html + docs.html live under `_internal/`, outside the repo — republish to webwakeup.it.)
+
+Lint: PHP 0 errors (ClauseLibrary, ComplianceStatusPage, DashboardPage). Smoke tests
+unaffected (they assert clause presence, not wording).
+
 ## [1.1.1] — 2026-06-18 — wordpress.org Plugin Check polish
 
 Final Plugin Check pass before submission. No functional change.
