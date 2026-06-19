@@ -95,7 +95,9 @@ final class ReceiptBuilder {
 		return array(
 			'name'    => (string) get_bloginfo( 'name' ),
 			'address' => implode( ', ', $address_parts ),
-			'email'   => (string) ( $settings['merchant_email'] ?? get_option( 'admin_email' ) ),
+			// merchant_email may hold a comma-separated notification list; the receipt
+			// shows a single public trader contact, so take the first address.
+			'email'   => \WWU\WithdrawalButton\Security\Sanitizer::first_email( (string) ( $settings['merchant_email'] ?? get_option( 'admin_email' ) ) ),
 		);
 	}
 

@@ -3,11 +3,23 @@
 All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); the project uses Semantic Versioning.
 
+## [1.2.5] — 2026-06-19 — PHP 7.4 fix (Dompdf 2.x) + multi-recipient notification e-mail
+
+**PHP 7.4 compatibility — Dompdf downgraded to 2.x.** Reported as issue #31. The bundled PDF engine was `dompdf/dompdf: ^3.1` (resolved v3.1.5), whose dependency tree (`sabberworm/php-css-parser` 9.x, `thecodingmachine/safe`) requires **PHP ≥ 8.1**, and Dompdf 3.x itself uses 8.1 syntax. This contradicted the plugin's declared `Requires PHP: 7.4`: on a PHP 7.4 site, Composer's generated `vendor/composer/platform_check.php` throws *"Your Composer dependencies require a PHP version >= 8.1.0"*, surfaced near the PDF-attachment option on the settings page. Fix: pin `dompdf/dompdf` to `^2.0` (resolved **v2.0.8**, tree PHP 7.1+); `composer.lock` regenerated — `thecodingmachine/safe` + the 3.x font/svg libs dropped, css-parser downgraded to 8.x. The `PdfBuilder` API (`Options`/`loadHtml`/`setPaper`/`render`/`output`) is identical in 2.x — verified by a standalone render producing a valid `%PDF-1.7`. `vendor/` is not committed (it is built from the lock at package time), so the fix is `composer.json` + `composer.lock`; the shipped `platform_check.php` now requires ≤ 7.4.
+
+**Notification e-mail accepts multiple recipients.** Requested by a user. The merchant "new withdrawal request" alert can now go to several addresses: `Settings → Notification email(s)` (the field is now free text) accepts a comma-separated list. New `Sanitizer::email_list()` runs `sanitize_email()` on each entry, drops invalid/empty, de-duplicates and caps at 10. `ConfirmationDispatcher` passes the list straight to `wp_mail()`, which natively accepts a comma-separated `to`. `ReceiptBuilder` shows only the **first** address as the public trader contact on the consumer receipt (new `Sanitizer::first_email()`), so the internal recipients are never exposed to the customer. A single address stays fully back-compatible. 3 new smoke assertions in `suite_durable_medium`.
+
+**FluentCart coexistence auto-detection wired.** FluentCart confirmed (2026-06-19) the stable signal for their free "Customer Rights" add-on (slug `fluent-cart-customer-rights`): the constant `FLUENT_CART_CUSTOMER_RIGHTS_PLUGIN_PATH`, defined on `plugins_loaded:20` as their double-load guard (won't be removed). `FluentCartAdapter::native_addon_active()` — until now a placeholder returning `false` — now returns `defined( 'FLUENT_CART_CUSTOMER_RIGHTS_PLUGIN_PATH' ) || class_exists( 'FluentCartCustomerRights' )`, still wrapped in the `wwu_wb_fluentcart_native_active` filter. So `fluentcart_mode = auto` (the default) genuinely auto-defers to FluentCart's native add-on now — the two-flows risk is gone without a manual "Off".
+
+**Display name corrected for WordPress.org.** The directory rejected "WWU Right of Withdrawal for WooCommerce, …" because the restricted term **WooCommerce** may not appear in a plugin display name. The name is now **"WWU Right of Withdrawal for Popular Ecommerce Platforms"** — a generic, trademark-free descriptor; the supported platforms stay named in the description + tags. Slug + text domain unchanged.
+
+No DB or schema change. PHP lint clean.
+
 ## [1.2.4] — 2026-06-19 — WordPress.org pre-review hardening + display-name refinement
 
 Addresses the WordPress.org plugin-directory pre-review (Review ID `AUTOPREREVIEW … TRM-OWN-LIC`). **No functional change** to the withdrawal flow, storage or evidence log; **slug + text domain unchanged** (`wwu-withdrawal-button`).
 
-**Ownership / trademark.** "WWU" is **our own brand** (WebWakeUp), not a third party's mark; ownership is verified by moving the WordPress.org account to an `@webwakeup.it` address. The display name is refined from "WWU Withdrawal Button" to **"WWU Right of Withdrawal for WooCommerce, FluentCart, EDD & more"** — more distinctive (drops the generic "Button", which collides with crypto withdrawal-button plugins; uses the statutory term) while keeping the `wwu-withdrawal-button` slug, so the text domain and all six translations are untouched.
+**Ownership / trademark.** "WWU" is **our own brand** (WebWakeUp), not a third party's mark; ownership is verified by moving the WordPress.org account to an `@webwakeup.it` address. The display name is refined from "WWU Withdrawal Button" to **"WWU Right of Withdrawal"** — more distinctive (drops the generic "Button", which collides with crypto withdrawal-button plugins; uses the statutory term) while keeping the `wwu-withdrawal-button` slug, so the text domain and all six translations are untouched.
 
 **Code hardening (reviewer items):**
 - `GuestAccess::check_rate_limit()` wraps `$_SERVER['REMOTE_ADDR']` in `sanitize_text_field( wp_unslash( … ) )`.

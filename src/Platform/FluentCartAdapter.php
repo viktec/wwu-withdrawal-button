@@ -73,18 +73,21 @@ final class FluentCartAdapter implements OrderDataSource, SubscriptionAware {
 	/**
 	 * Whether FluentCart's own native right-of-withdrawal add-on is active.
 	 *
-	 * FluentCart confirmed (2026-06-15) it will ship a dedicated withdrawal add-on.
-	 * Its exact detection signal (class / constant) is pending from their team, so the
-	 * built-in check is conservative (false — nothing to defer to) and the result is
-	 * filterable: the moment the add-on ships, wire it through
-	 * `wwu_wb_fluentcart_native_active` without waiting for a plugin update.
+	 * FluentCart shipped its "Customer Rights" add-on (free, separate plugin, slug
+	 * `fluent-cart-customer-rights`). The FluentCart team confirmed (2026-06-19) the
+	 * stable detection signal: the constant `FLUENT_CART_CUSTOMER_RIGHTS_PLUGIN_PATH`,
+	 * defined at boot (available on plugins_loaded priority 20) as their own
+	 * double-load guard, which will not be removed; `class_exists( 'FluentCartCustomerRights' )`
+	 * is a secondary guard. The result remains filterable via
+	 * `wwu_wb_fluentcart_native_active` for forward-compatibility.
 	 *
 	 * @return bool
 	 */
 	public static function native_addon_active(): bool {
-		// No published detection signal yet → default false. Update this guard (or use
-		// the filter) once FluentCart's add-on class / constant is known.
-		$detected = false;
+		// FluentCart "Customer Rights" add-on detection (team-confirmed signal,
+		// 2026-06-19). Constant first (set on plugins_loaded:20, their double-load
+		// guard), class as a secondary guard.
+		$detected = defined( 'FLUENT_CART_CUSTOMER_RIGHTS_PLUGIN_PATH' ) || class_exists( 'FluentCartCustomerRights' );
 		/**
 		 * Filter whether FluentCart's native withdrawal add-on is active.
 		 *

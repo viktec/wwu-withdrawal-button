@@ -468,9 +468,9 @@ final class SettingsPage {
 		}
 		echo '</td></tr>';
 
-		echo '<tr><th scope="row">' . esc_html__( 'Notification email', 'wwu-withdrawal-button' ) . '</th><td>';
-		echo '<input type="email" name="merchant_email" class="regular-text" value="' . esc_attr( $merchant ) . '" />';
-		echo '<p class="description">' . esc_html__( 'Where to notify you of new withdrawal requests.', 'wwu-withdrawal-button' ) . '</p>';
+		echo '<tr><th scope="row">' . esc_html__( 'Notification email(s)', 'wwu-withdrawal-button' ) . '</th><td>';
+		echo '<input type="text" name="merchant_email" class="regular-text" value="' . esc_attr( $merchant ) . '" />';
+		echo '<p class="description">' . esc_html__( 'Where to notify you of new withdrawal requests. Separate several addresses with commas to notify more than one person; the first address is also shown to the customer as the shop contact.', 'wwu-withdrawal-button' ) . '</p>';
 		echo '</td></tr>';
 
 		echo '<tr><th scope="row">' . esc_html__( 'Evidence retention (years)', 'wwu-withdrawal-button' ) . '</th><td>';
@@ -1092,7 +1092,7 @@ final class SettingsPage {
 		$settings['enabled']    = Sanitizer::bool( $_POST['enabled'] ?? '' );
 		$settings['custom_css'] = Sanitizer::css( isset( $_POST['custom_css'] ) ? wp_unslash( $_POST['custom_css'] ) : '' );
 		$settings['send_pdf']        = Sanitizer::bool( $_POST['send_pdf'] ?? '' );
-		$settings['merchant_email']  = sanitize_email( (string) ( $_POST['merchant_email'] ?? '' ) );
+		$settings['merchant_email']  = Sanitizer::email_list( isset( $_POST['merchant_email'] ) ? wp_unslash( $_POST['merchant_email'] ) : '' ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Sanitizer::email_list() runs sanitize_email() on each entry.
 		$settings['retention_years'] = max( 1, min( 30, (int) ( $_POST['retention_years'] ?? 10 ) ) );
 		// IP capture for the exemption-consent evidence (GDPR strict-necessity → configurable).
 		$settings['consent_capture_ip'] = Sanitizer::bool( $_POST['consent_capture_ip'] ?? '' );
