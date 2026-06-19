@@ -538,6 +538,24 @@ final class SmokeTests {
 			'Receipt store path is confined and uid-named.'
 		);
 
+		$el = \WWU\WithdrawalButton\Security\Sanitizer::email_list( ' a@x.com , not-an-email , b@y.com, a@x.com ' );
+		$tests[] = $this->assert(
+			'durable_medium.email_list_multi',
+			'a@x.com, b@y.com' === $el,
+			'email_list() keeps valid addresses, drops invalid, trims and de-duplicates (got "' . $el . '").'
+		);
+		$tests[] = $this->assert(
+			'durable_medium.email_list_single',
+			'solo@x.com' === \WWU\WithdrawalButton\Security\Sanitizer::email_list( 'solo@x.com' ),
+			'email_list() leaves a single valid address intact (back-compatible).'
+		);
+		$tests[] = $this->assert(
+			'durable_medium.first_email',
+			'a@x.com' === \WWU\WithdrawalButton\Security\Sanitizer::first_email( 'a@x.com, b@y.com' )
+				&& '' === \WWU\WithdrawalButton\Security\Sanitizer::first_email( '' ),
+			'first_email() returns the primary address (the receipt trader contact) and "" for an empty list.'
+		);
+
 		return $tests;
 	}
 

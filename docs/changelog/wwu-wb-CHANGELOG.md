@@ -3,6 +3,14 @@
 All notable changes to this project are documented here. Format loosely follows
 [Keep a Changelog](https://keepachangelog.com/); the project uses Semantic Versioning.
 
+## [1.2.5] — 2026-06-19 — PHP 7.4 fix (Dompdf 2.x) + multi-recipient notification e-mail
+
+**PHP 7.4 compatibility — Dompdf downgraded to 2.x.** Reported as issue #31. The bundled PDF engine was `dompdf/dompdf: ^3.1` (resolved v3.1.5), whose dependency tree (`sabberworm/php-css-parser` 9.x, `thecodingmachine/safe`) requires **PHP ≥ 8.1**, and Dompdf 3.x itself uses 8.1 syntax. This contradicted the plugin's declared `Requires PHP: 7.4`: on a PHP 7.4 site, Composer's generated `vendor/composer/platform_check.php` throws *"Your Composer dependencies require a PHP version >= 8.1.0"*, surfaced near the PDF-attachment option on the settings page. Fix: pin `dompdf/dompdf` to `^2.0` (resolved **v2.0.8**, tree PHP 7.1+); `composer.lock` regenerated — `thecodingmachine/safe` + the 3.x font/svg libs dropped, css-parser downgraded to 8.x. The `PdfBuilder` API (`Options`/`loadHtml`/`setPaper`/`render`/`output`) is identical in 2.x — verified by a standalone render producing a valid `%PDF-1.7`. `vendor/` is not committed (it is built from the lock at package time), so the fix is `composer.json` + `composer.lock`; the shipped `platform_check.php` now requires ≤ 7.4.
+
+**Notification e-mail accepts multiple recipients.** Requested by a user. The merchant "new withdrawal request" alert can now go to several addresses: `Settings → Notification email(s)` (the field is now free text) accepts a comma-separated list. New `Sanitizer::email_list()` runs `sanitize_email()` on each entry, drops invalid/empty, de-duplicates and caps at 10. `ConfirmationDispatcher` passes the list straight to `wp_mail()`, which natively accepts a comma-separated `to`. `ReceiptBuilder` shows only the **first** address as the public trader contact on the consumer receipt (new `Sanitizer::first_email()`), so the internal recipients are never exposed to the customer. A single address stays fully back-compatible. 3 new smoke assertions in `suite_durable_medium`.
+
+No DB or schema change. PHP lint clean.
+
 ## [1.2.4] — 2026-06-19 — WordPress.org pre-review hardening + display-name refinement
 
 Addresses the WordPress.org plugin-directory pre-review (Review ID `AUTOPREREVIEW … TRM-OWN-LIC`). **No functional change** to the withdrawal flow, storage or evidence log; **slug + text domain unchanged** (`wwu-withdrawal-button`).
