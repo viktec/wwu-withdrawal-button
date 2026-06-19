@@ -9,13 +9,17 @@ All notable changes to this project are documented here. Format loosely follows
 
 **Notification e-mail accepts multiple recipients.** Requested by a user. The merchant "new withdrawal request" alert can now go to several addresses: `Settings → Notification email(s)` (the field is now free text) accepts a comma-separated list. New `Sanitizer::email_list()` runs `sanitize_email()` on each entry, drops invalid/empty, de-duplicates and caps at 10. `ConfirmationDispatcher` passes the list straight to `wp_mail()`, which natively accepts a comma-separated `to`. `ReceiptBuilder` shows only the **first** address as the public trader contact on the consumer receipt (new `Sanitizer::first_email()`), so the internal recipients are never exposed to the customer. A single address stays fully back-compatible. 3 new smoke assertions in `suite_durable_medium`.
 
+**FluentCart coexistence auto-detection wired.** FluentCart confirmed (2026-06-19) the stable signal for their free "Customer Rights" add-on (slug `fluent-cart-customer-rights`): the constant `FLUENT_CART_CUSTOMER_RIGHTS_PLUGIN_PATH`, defined on `plugins_loaded:20` as their double-load guard (won't be removed). `FluentCartAdapter::native_addon_active()` — until now a placeholder returning `false` — now returns `defined( 'FLUENT_CART_CUSTOMER_RIGHTS_PLUGIN_PATH' ) || class_exists( 'FluentCartCustomerRights' )`, still wrapped in the `wwu_wb_fluentcart_native_active` filter. So `fluentcart_mode = auto` (the default) genuinely auto-defers to FluentCart's native add-on now — the two-flows risk is gone without a manual "Off".
+
+**Display name corrected for WordPress.org.** The directory rejected "WWU Right of Withdrawal for WooCommerce, …" because the restricted term **WooCommerce** may not appear in a plugin display name. The name is now **"WWU Right of Withdrawal for All the Famous Ecommerce Platforms"** — a generic, trademark-free descriptor; the supported platforms stay named in the description + tags. Slug + text domain unchanged.
+
 No DB or schema change. PHP lint clean.
 
 ## [1.2.4] — 2026-06-19 — WordPress.org pre-review hardening + display-name refinement
 
 Addresses the WordPress.org plugin-directory pre-review (Review ID `AUTOPREREVIEW … TRM-OWN-LIC`). **No functional change** to the withdrawal flow, storage or evidence log; **slug + text domain unchanged** (`wwu-withdrawal-button`).
 
-**Ownership / trademark.** "WWU" is **our own brand** (WebWakeUp), not a third party's mark; ownership is verified by moving the WordPress.org account to an `@webwakeup.it` address. The display name is refined from "WWU Withdrawal Button" to **"WWU Right of Withdrawal for WooCommerce, FluentCart, EDD & more"** — more distinctive (drops the generic "Button", which collides with crypto withdrawal-button plugins; uses the statutory term) while keeping the `wwu-withdrawal-button` slug, so the text domain and all six translations are untouched.
+**Ownership / trademark.** "WWU" is **our own brand** (WebWakeUp), not a third party's mark; ownership is verified by moving the WordPress.org account to an `@webwakeup.it` address. The display name is refined from "WWU Withdrawal Button" to **"WWU Right of Withdrawal"** — more distinctive (drops the generic "Button", which collides with crypto withdrawal-button plugins; uses the statutory term) while keeping the `wwu-withdrawal-button` slug, so the text domain and all six translations are untouched.
 
 **Code hardening (reviewer items):**
 - `GuestAccess::check_rate_limit()` wraps `$_SERVER['REMOTE_ADDR']` in `sanitize_text_field( wp_unslash( … ) )`.

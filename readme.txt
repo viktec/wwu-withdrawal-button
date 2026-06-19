@@ -1,4 +1,4 @@
-=== WWU Right of Withdrawal for WooCommerce, FluentCart, EDD & more ===
+=== WWU Right of Withdrawal for All the Famous Ecommerce Platforms ===
 Contributors: mredodos, webwakeup, anideaforbusiness
 Tags: woocommerce, fluentcart, right of withdrawal, recesso, gdpr
 Requires at least: 5.8
@@ -125,9 +125,10 @@ For the conditional Art. 59 exemptions, the plugin also stores the consumer's ch
 = 1.2.5 =
 * **PHP 7.4 compatibility fixed (PDF library).** The bundled PDF engine (Dompdf) had been updated to a 3.x release that requires PHP 8.1, which contradicted the plugin's "Requires PHP 7.4" and produced a Composer "platform" error near the PDF option on PHP 7.4 sites. Dompdf is now pinned to the 7.4-compatible 2.x line (PHP 7.1+), so the plugin runs on PHP 7.4 again with no change to the PDF receipts. (Thanks to the reporter of issue #31.)
 * **Notification e-mail now accepts multiple recipients.** Settings → "Notification email(s)" accepts several addresses separated by commas, so the "new withdrawal request" alert can reach more than one person. The first address is also shown to the customer as the shop contact. A single address keeps working exactly as before.
+* **FluentCart coexistence is now automatic.** FluentCart shipped its own free "Customer Rights" add-on. With the FluentCart handling left on Auto (the default), the plugin now detects that add-on automatically and steps aside on FluentCart, so customers never see two withdrawal flows. WooCommerce and EDD are unaffected; you can still force the behaviour from Settings → FluentCart.
 
 = 1.2.4 =
-* **Housekeeping + WordPress.org compliance hardening.** Display name refined to "WWU Right of Withdrawal for WooCommerce, FluentCart, EDD & more" (the plugin slug is unchanged, so nothing breaks on update). Additional input sanitisation on the rate-limiter, URL escaping tightened in the plain-text e-mails, explicit REST permission callbacks declared on the public withdrawal endpoints, and the now-unneeded textdomain loader removed (WordPress loads translations automatically since 4.6). No change to the withdrawal flow, your data or the evidence log.
+* **Housekeeping + WordPress.org compliance hardening.** Display name refined to "WWU Right of Withdrawal" (the plugin slug is unchanged, so nothing breaks on update). Additional input sanitisation on the rate-limiter, URL escaping tightened in the plain-text e-mails, explicit REST permission callbacks declared on the public withdrawal endpoints, and the now-unneeded textdomain loader removed (WordPress loads translations automatically since 4.6). No change to the withdrawal flow, your data or the evidence log.
 
 = 1.2.3 =
 * **Acknowledgement e-mail failures now report the exact reason, not a generic message.** Building on the 1.2.2 fix: when the acknowledgement e-mail cannot be sent, the plugin now captures the specific reason from the mail transport — the SMTP plugin's own error (for example "Could not authenticate" or "Could not connect to host") or the thrown exception's message — and shows it in the admin "e-mail failed" notice and records it in the tamper-evident log, instead of a generic "email failed". Diagnosing an SMTP misconfiguration (WP Mail SMTP, FluentSMTP, a provider mailer) is now immediate, without digging through the PHP error log. The withdrawal is still always recorded and the consumer always reaches their confirmation page.
@@ -230,7 +231,7 @@ For the conditional Art. 59 exemptions, the plugin also stores the consumer's ch
 Fixes PHP 7.4 compatibility: the bundled PDF library (Dompdf) had been requiring PHP 8.1 and showed a Composer platform error on PHP 7.4 sites; it is now pinned to the 7.4-compatible 2.x line. Also: the notification e-mail field now accepts multiple comma-separated recipients.
 
 = 1.2.4 =
-Housekeeping + WordPress.org compliance hardening (input sanitisation, output escaping, explicit REST permission callbacks). The display name is now "WWU Right of Withdrawal for WooCommerce, FluentCart, EDD & more"; the slug is unchanged. No change to the withdrawal flow or your data.
+Housekeeping + WordPress.org compliance hardening (input sanitisation, output escaping, explicit REST permission callbacks). The display name is now "WWU Right of Withdrawal"; the slug is unchanged. No change to the withdrawal flow or your data.
 
 = 1.2.3 =
 Follow-up to the 1.2.2 e-mail fix: a failed acknowledgement e-mail now shows the exact transport reason (for example the SMTP plugin's "Could not authenticate") in the admin notice and the immutable log, instead of a generic "email failed", so an SMTP misconfiguration is obvious at a glance.
