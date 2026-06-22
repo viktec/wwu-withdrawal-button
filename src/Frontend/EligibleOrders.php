@@ -346,17 +346,15 @@ final class EligibleOrders {
 	}
 
 	/**
-	 * URL of the withdrawal form for an order (account endpoint + order ref).
+	 * URL of the withdrawal form for an order, viewer-aware.
+	 *
+	 * Delegates to the shared WithdrawalUrl helper so guests are routed to the
+	 * public form page instead of the login-gated account endpoint.
 	 *
 	 * @param string $order_ref Order reference.
 	 * @return string
 	 */
 	private static function form_url( string $order_ref ): string {
-		$settings = (array) get_option( 'wwu_wb_settings', array() );
-		$slug     = sanitize_title( (string) ( $settings['endpoint_slug'] ?? 'wwu-withdrawal' ) );
-		if ( function_exists( 'wc_get_account_endpoint_url' ) ) {
-			return add_query_arg( 'wwu_wb_order', rawurlencode( $order_ref ), wc_get_account_endpoint_url( $slug ) );
-		}
-		return add_query_arg( 'wwu_wb_order', rawurlencode( $order_ref ) );
+		return WithdrawalUrl::resolve( $order_ref );
 	}
 }

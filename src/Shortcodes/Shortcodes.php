@@ -22,6 +22,7 @@ use WWU\WithdrawalButton\Core\Services;
 use WWU\WithdrawalButton\Frontend\ExemptionNoteRenderer;
 use WWU\WithdrawalButton\Frontend\GuestAccess;
 use WWU\WithdrawalButton\Frontend\Template;
+use WWU\WithdrawalButton\Frontend\WithdrawalUrl;
 use WWU\WithdrawalButton\Legal\ClauseLibrary;
 use WWU\WithdrawalButton\Legal\ModelForm;
 use WWU\WithdrawalButton\Platform\NormalizedOrder;
@@ -232,18 +233,17 @@ final class Shortcodes {
 	}
 
 	/**
-	 * Build the form URL for an order (account endpoint or current page).
+	 * Build the withdrawal-form URL for an order, viewer-aware.
+	 *
+	 * Delegates to the shared WithdrawalUrl helper: logged-in customers get the
+	 * My Account endpoint, guests get the public form page (no login) carrying the
+	 * order key. See WithdrawalUrl::resolve().
 	 *
 	 * @param NormalizedOrder $order Order.
 	 * @return string
 	 */
 	private function form_url( NormalizedOrder $order ): string {
-		if ( function_exists( 'wc_get_account_endpoint_url' ) ) {
-			$settings = (array) get_option( 'wwu_wb_settings', array() );
-			$slug     = sanitize_title( (string) ( $settings['endpoint_slug'] ?? 'wwu-withdrawal' ) );
-			return add_query_arg( 'wwu_wb_order', rawurlencode( $order->order_ref ), wc_get_account_endpoint_url( $slug ) );
-		}
-		return add_query_arg( 'wwu_wb_order', rawurlencode( $order->order_ref ) );
+		return WithdrawalUrl::resolve( $order->order_ref );
 	}
 
 	/**
